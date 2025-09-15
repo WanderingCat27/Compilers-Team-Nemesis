@@ -1,7 +1,7 @@
 grammar Simple;
 
 prog: (expr NEWLINE)*
-	| (if_statement NEWLINE)*
+	| (if_block NEWLINE)*
 	| (assignment NEWLINE)*
 	| NEWLINE*;
 assignment: WORD '=' expr | WORD '=' STRING | WORD '=' INT;
@@ -14,7 +14,11 @@ expr:
 
 conditionals: ('equal to' | 'greater than' | 'less');
 
-if_statement: 'is' expr conditionals expr;
+if_statement: 'is' (INT | expr | WORD) conditionals (INT | expr | WORD);
+else_statement: 'if not';
+
+if_block: if_statement '{' prog '}' (else_statement if_statement '{' prog '}')* (else_statement '{' prog '}')? ;
+
 
 NEWLINE: WHITESPACE* [\r\n]+;
 INT: [0-9]+;
