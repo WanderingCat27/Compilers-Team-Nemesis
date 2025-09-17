@@ -1,4 +1,4 @@
-// Generated from c:/Users/hayde/OneDrive/Desktop/Classes/CSC320/Nemesis/Compilers-Team-Nemesis/Simple.g4 by ANTLR 4.13.1
+// Generated from Simple.g4 by ANTLR 4.13.2
 import org.antlr.v4.runtime.tree.ParseTreeListener;
 
 /**
@@ -26,6 +26,16 @@ public interface SimpleListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitAssignment(SimpleParser.AssignmentContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link SimpleParser#statement}.
+	 * @param ctx the parse tree
+	 */
+	void enterStatement(SimpleParser.StatementContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SimpleParser#statement}.
+	 * @param ctx the parse tree
+	 */
+	void exitStatement(SimpleParser.StatementContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link SimpleParser#expr}.
 	 * @param ctx the parse tree
@@ -76,4 +86,24 @@ public interface SimpleListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitIf_block(SimpleParser.If_blockContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link SimpleParser#for_statement}.
+	 * @param ctx the parse tree
+	 */
+	void enterFor_statement(SimpleParser.For_statementContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SimpleParser#for_statement}.
+	 * @param ctx the parse tree
+	 */
+	void exitFor_statement(SimpleParser.For_statementContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link SimpleParser#statementBlock}.
+	 * @param ctx the parse tree
+	 */
+	void enterStatementBlock(SimpleParser.StatementBlockContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SimpleParser#statementBlock}.
+	 * @param ctx the parse tree
+	 */
+	void exitStatementBlock(SimpleParser.StatementBlockContext ctx);
 }
