@@ -1,6 +1,5 @@
- 
- h = 1
- repeat 5 {
-    1 add 1
-    2 add 2
- }
+h = 1
+repeat 5 {
+   1 add 1
+   2 add 2
+}
