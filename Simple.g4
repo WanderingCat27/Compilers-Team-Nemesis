@@ -16,7 +16,6 @@ expr:
 	| INT
 	| '(' expr ')';
 
-// TODO: add greater/less than or equal to
 conditional_statements: (
 		'equal to'
 		| 'greater than'
