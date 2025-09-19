@@ -7,7 +7,7 @@
   mathematical operations are written out ('plus' = +)
   for loops = repeat followed by int
   while loops = while followed by condition
-  to print use 'print'
+  to print use 'print' (string, decimal, int, word)
   if statements = 'is' statements followed by {}
   else if statements = 'if not' statements followed by {}
   functions = definition followed by (conditions)
