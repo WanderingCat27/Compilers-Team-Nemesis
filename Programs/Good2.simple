@@ -2,3 +2,8 @@
 
 print "a"
 in = input number
+is in equal to 11 {
+    print "You selected 11"
+} if not {
+    print "you did not select 11"
+}
