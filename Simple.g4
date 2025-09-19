@@ -21,6 +21,7 @@ expr:
 	expr ('multiply' | 'divide' | 'mod') expr
 	| expr ('plus' | 'minus') expr
 	| INT
+	| DECIMAL
 	| WORD
 	| '(' expr ')';
 

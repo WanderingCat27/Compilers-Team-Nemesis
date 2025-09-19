@@ -1,0 +1,7 @@
+*Spelling is important and can be an easy mistake
+
+defne badFunction (varOne, varTwo) {*Creates a syntax error because the program
+                                    *thinks that this is a call function so the
+                                    *varOne divide varTwo line is never reached 
+    varOne divide varTwo 
+}
