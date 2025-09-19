@@ -7,6 +7,7 @@ array: '[' (STRING ',')* ?STRING ']';
 
 statement:
 	for_statement
+	| while_statement
 	| expr
 	| if_block
 	| assignment
@@ -41,6 +42,7 @@ if_block:
 	)* (else_statement '{' prog '}')?;
 
 for_statement: 'repeat' (INT) statementBlock;
+while_statement: 'while' condition statementBlock;
 statementBlock: '{' (statement | 'continue' | 'break')* '}';
 
 input: input_decimal | input_string | input_number;
