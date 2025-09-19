@@ -47,15 +47,25 @@ public interface SimpleListener extends ParseTreeListener {
 	 */
 	void exitExpr(SimpleParser.ExprContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link SimpleParser#conditionals}.
+	 * Enter a parse tree produced by {@link SimpleParser#conditional_statements}.
 	 * @param ctx the parse tree
 	 */
-	void enterConditionals(SimpleParser.ConditionalsContext ctx);
+	void enterConditional_statements(SimpleParser.Conditional_statementsContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link SimpleParser#conditionals}.
+	 * Exit a parse tree produced by {@link SimpleParser#conditional_statements}.
 	 * @param ctx the parse tree
 	 */
-	void exitConditionals(SimpleParser.ConditionalsContext ctx);
+	void exitConditional_statements(SimpleParser.Conditional_statementsContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link SimpleParser#condition}.
+	 * @param ctx the parse tree
+	 */
+	void enterCondition(SimpleParser.ConditionContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SimpleParser#condition}.
+	 * @param ctx the parse tree
+	 */
+	void exitCondition(SimpleParser.ConditionContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link SimpleParser#if_statement}.
 	 * @param ctx the parse tree
@@ -97,6 +107,16 @@ public interface SimpleListener extends ParseTreeListener {
 	 */
 	void exitFor_statement(SimpleParser.For_statementContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link SimpleParser#while_statement}.
+	 * @param ctx the parse tree
+	 */
+	void enterWhile_statement(SimpleParser.While_statementContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SimpleParser#while_statement}.
+	 * @param ctx the parse tree
+	 */
+	void exitWhile_statement(SimpleParser.While_statementContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link SimpleParser#statementBlock}.
 	 * @param ctx the parse tree
 	 */
@@ -106,4 +126,44 @@ public interface SimpleListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitStatementBlock(SimpleParser.StatementBlockContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link SimpleParser#input_string}.
+	 * @param ctx the parse tree
+	 */
+	void enterInput_string(SimpleParser.Input_stringContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SimpleParser#input_string}.
+	 * @param ctx the parse tree
+	 */
+	void exitInput_string(SimpleParser.Input_stringContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link SimpleParser#input_number}.
+	 * @param ctx the parse tree
+	 */
+	void enterInput_number(SimpleParser.Input_numberContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SimpleParser#input_number}.
+	 * @param ctx the parse tree
+	 */
+	void exitInput_number(SimpleParser.Input_numberContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link SimpleParser#input_decimal}.
+	 * @param ctx the parse tree
+	 */
+	void enterInput_decimal(SimpleParser.Input_decimalContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SimpleParser#input_decimal}.
+	 * @param ctx the parse tree
+	 */
+	void exitInput_decimal(SimpleParser.Input_decimalContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link SimpleParser#output}.
+	 * @param ctx the parse tree
+	 */
+	void enterOutput(SimpleParser.OutputContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SimpleParser#output}.
+	 * @param ctx the parse tree
+	 */
+	void exitOutput(SimpleParser.OutputContext ctx);
 }
