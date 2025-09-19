@@ -1,1 +1,5 @@
-* take an input & check if it is 1
+* variables cannot contain symbols
+
+x=3 * works
+
+th!s = "is invalid" * does not work because '!' is invalid in a variable name

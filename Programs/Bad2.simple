@@ -1,0 +1,5 @@
+* math expressions operators are literal words no + - / *
+
+two=1 plus 1 * correct syntax
+
+invalid = 7 + 4 * '+' is an invalid operator, in this case it should be 'plus

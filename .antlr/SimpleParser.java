@@ -40,7 +40,7 @@ public class SimpleParser extends Parser {
 	private static String[] makeLiteralNames() {
 		return new String[] {
 			null, "'='", "'['", "','", "']'", "'multiply'", "'divide'", "'mod'", 
-			"'add'", "'minus'", "'('", "')'", "'not'", "'equal to'", "'greater than'", 
+			"'plus'", "'minus'", "'('", "')'", "'not'", "'equal to'", "'greater than'", 
 			"'less than'", "'less than or equal to'", "'greater than or equal to'", 
 			"'is'", "'if not'", "'{'", "'}'", "'repeat'", "'continue'", "'break'", 
 			"'input string'", "'input number'", "'input decimal'", "'print'"
