@@ -1,0 +1,4 @@
+* Take an input and check if is equal to 11
+
+print "a"
+in = input number

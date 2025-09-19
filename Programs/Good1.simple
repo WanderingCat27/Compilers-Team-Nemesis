@@ -1,0 +1,9 @@
+* print numbers 1-10 & skip 3
+
+i=1
+repeat 10 {
+    is i not equal to 3 {
+        print i
+    }
+    i=i plus 1
+}
