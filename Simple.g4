@@ -1,6 +1,6 @@
 grammar Simple;
 
-prog: statement+ EOF;
+prog: statement*;
 assignment: WORD '=' expr | WORD '=' STRING | WORD '=' INT;
 
 statement:
@@ -46,8 +46,8 @@ input_decimal: 'input decimal' DECIMAL;
 
 output: 'print' (STRING | DECIMAL | INT);
 
-INT: [0-9]+;
-DECIMAL: [0-9]+ '.' [0-9]+;
+INT: '-'?[0-9]+;
+DECIMAL: '-'?[0-9]+ '.' [0-9]+;
 WORD: ([a-z] | [A-Z])+;
 COMMENT_LINE: '*' ~[\n\r]* -> skip; // skip comments
 STRING: '"' ([a-z] | [A-Z] | [0-9] | [\r\n\t])* '"';
