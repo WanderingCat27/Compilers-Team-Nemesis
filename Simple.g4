@@ -1,7 +1,7 @@
 grammar Simple;
 
 prog: statement*;
-assignment: WORD '=' expr | WORD '=' STRING | WORD '=' INT;
+assignment: WORD '=' expr | WORD '=' STRING | WORD '=' INT | WORD '=' input | WORD '=' WORD;
 
 statement:
 	for_statement
@@ -9,25 +9,26 @@ statement:
 	| expr
 	| if_block
 	| assignment
-	| condition;
+	| condition
+	| output;
 
 expr:
 	expr ('multiply' | 'divide' | 'mod') expr
 	| expr ('add' | 'minus') expr
 	| INT
+	| WORD
 	| '(' expr ')';
 
 conditional_statements: (
-		'equal to'
+		'not'? ('equal to'
 		| 'greater than'
 		| 'less than'
 		| 'less than or equal to'
-		| 'greater than or equal to'
+		| 'greater than or equal to')
 	);
-condition: (INT | expr | WORD) conditional_statements (
-		INT
+condition: (WORD | INT | expr) conditional_statements (
+		WORD | INT
 		| expr
-		| WORD
 	);
 
 if_statement: 'is' condition;
@@ -42,15 +43,17 @@ for_statement: 'repeat' (INT) statementBlock;
 while_statement: 'while' condition statementBlock;
 statementBlock: '{' (statement | 'continue' | 'break')* '}';
 
-input_string: 'input' STRING;
-input_number: 'input number' INT;
-input_decimal: 'input decimal' DECIMAL;
+input: input_decimal | input_string | input_number;
 
-output: 'print' (STRING | DECIMAL | INT);
+input_string: 'input string';
+input_number: 'input number';
+input_decimal: 'input decimal';
 
+output: 'print' (STRING | DECIMAL | INT | WORD);
+
+STRING: '"' [^"]* '"';
 INT: '-'?[0-9]+;
-DECIMAL: '-'?[0-9]+ '.' [0-9]+;
+DECIMAL: '-'?[0-9]* '.' [0-9]*;
 WORD: ([a-z] | [A-Z])+;
 COMMENT_LINE: '*' ~[\n\r]* -> skip; // skip comments
-STRING: '"' ([a-z] | [A-Z] | [0-9] | [\r\n\t])* '"';
 WHITESPACE: [ \r\n\t]+ -> skip; // skip extra white space
