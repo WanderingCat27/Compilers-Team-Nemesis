@@ -3,7 +3,7 @@ grammar Simple;
 prog: statement*;
 assignment: WORD '=' expr | WORD '=' STRING | WORD '=' INT | WORD '=' input | WORD '=' WORD;
 
-array: ('[' (STRING ','| INT ',' | DECIMAL ',')*? STRING | INT | DECIMAL ']');
+array: ('[' (STRING ','| INT ',' | DECIMAL ',')*? (STRING | INT | DECIMAL) ']');
 
 statement:
 	for_statement
