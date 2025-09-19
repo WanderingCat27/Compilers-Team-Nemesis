@@ -3,7 +3,7 @@ grammar Simple;
 prog: statement*;
 assignment: WORD '=' expr | WORD '=' STRING | WORD '=' INT | WORD '=' input | WORD '=' WORD;
 
-array: '[' (STRING ',')* ?STRING ']';
+array: ('[' (STRING ','| INT ',' | DECIMAL ',')*? STRING | INT | DECIMAL ']');
 
 statement:
 	for_statement
@@ -14,11 +14,12 @@ statement:
 	| condition
 	| functionDefinition
 	| functionCall
+	| array
 	| output;
 
 expr:
 	expr ('multiply' | 'divide' | 'mod') expr
-	| expr ('add' | 'minus') expr
+	| expr ('plus' | 'minus') expr
 	| INT
 	| WORD
 	| '(' expr ')';
@@ -59,7 +60,7 @@ input_decimal: 'input decimal';
 
 output: 'print' (STRING | DECIMAL | INT | WORD);
 
-STRING: '"' [^"]* '"';
+STRING: '"' ( ~["] )* '"';
 INT: '-'?[0-9]+;
 DECIMAL: '-'?[0-9]* '.' [0-9]*;
 WORD: ([a-z] | [A-Z])+;
