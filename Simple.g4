@@ -38,9 +38,16 @@ if_block:
 	)* (else_statement '{' prog '}')?;
 
 for_statement: 'repeat' (INT) statementBlock;
-statementBlock: '{' statement* '}';
+statementBlock: '{' (statement | 'continue' | 'break')* '}';
+
+input_string: 'input' STRING;
+input_number: 'input number' STRING;
+input_decimal: 'input decimal' DECIMAL;
+
+output: 'print' (STRING | DECIMAL | INT);
 
 INT: [0-9]+;
+DECIMAL: [0-9]+ '.' [0-9]+;
 WORD: ([a-z] | [A-Z])+;
 COMMENT_LINE: '*' ~[\n\r]* -> skip; // skip comments
 STRING: '"' ([a-z] | [A-Z] | [0-9] | [\r\n\t])* '"';
