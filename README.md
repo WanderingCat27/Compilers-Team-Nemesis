@@ -3,7 +3,7 @@
 1. First compile compiler with antlr4 Simple.g4
 2. Run programs using terminal (antlr4-parse Simple.g4 prog -tree Programs/Good1.simple for example.)
 3. Tips for understanding programs
-  * for comments
+  '*' for comments
   mathematical operations are written out ('plus' = +)
   for loops = repeat followed by int
   while loops = while followed by condition
