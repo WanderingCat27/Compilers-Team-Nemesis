@@ -12,6 +12,8 @@ statement:
 	| if_block
 	| assignment
 	| condition
+	| functionDefinition
+	| functionCall
 	| output;
 
 expr:
@@ -44,6 +46,10 @@ if_block:
 for_statement: 'repeat' (INT) statementBlock;
 while_statement: 'while' condition statementBlock;
 statementBlock: '{' (statement | 'continue' | 'break')* '}';
+
+functionDefinition: 'define' WORD '(' (WORD (',' WORD)*)? ')' statementBlock;
+
+functionCall: WORD '(' (WORD (',' WORD)*)? ')';
 
 input: input_decimal | input_string | input_number;
 
