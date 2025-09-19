@@ -40,6 +40,18 @@ public class SimpleBaseListener implements SimpleListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterArray(SimpleParser.ArrayContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitArray(SimpleParser.ArrayContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterStatement(SimpleParser.StatementContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -155,6 +167,18 @@ public class SimpleBaseListener implements SimpleListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitStatementBlock(SimpleParser.StatementBlockContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterInput(SimpleParser.InputContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitInput(SimpleParser.InputContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *

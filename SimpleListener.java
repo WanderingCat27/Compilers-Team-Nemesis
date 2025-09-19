@@ -27,6 +27,16 @@ public interface SimpleListener extends ParseTreeListener {
 	 */
 	void exitAssignment(SimpleParser.AssignmentContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link SimpleParser#array}.
+	 * @param ctx the parse tree
+	 */
+	void enterArray(SimpleParser.ArrayContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SimpleParser#array}.
+	 * @param ctx the parse tree
+	 */
+	void exitArray(SimpleParser.ArrayContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link SimpleParser#statement}.
 	 * @param ctx the parse tree
 	 */
@@ -126,6 +136,16 @@ public interface SimpleListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitStatementBlock(SimpleParser.StatementBlockContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link SimpleParser#input}.
+	 * @param ctx the parse tree
+	 */
+	void enterInput(SimpleParser.InputContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SimpleParser#input}.
+	 * @param ctx the parse tree
+	 */
+	void exitInput(SimpleParser.InputContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link SimpleParser#input_string}.
 	 * @param ctx the parse tree

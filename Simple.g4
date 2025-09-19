@@ -3,6 +3,8 @@ grammar Simple;
 prog: statement*;
 assignment: WORD '=' expr | WORD '=' STRING | WORD '=' INT | WORD '=' input | WORD '=' WORD;
 
+array: '[' (STRING ',')* ?STRING ']';
+
 statement:
 	for_statement
 	| while_statement
