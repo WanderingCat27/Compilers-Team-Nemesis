@@ -1,8 +1,0 @@
-.antlr
-**/*.class
-**/*.interp
-**/*.tokens
-env
-*Lexer.java
-*Parser.java
-*Listener.java
