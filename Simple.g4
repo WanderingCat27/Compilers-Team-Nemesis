@@ -1,9 +1,9 @@
 grammar Simple;
 
 prog: statement*;
-assignment: WORD '=' expr | WORD '=' STRING | WORD '=' INT | WORD '=' input | WORD '=' WORD;
+assignment: VARIABLE '=' varExprOrType;
 
-array: ('[' (STRING ','| INT ',' | DECIMAL ',')*? (STRING | INT | DECIMAL) ']');
+array: ( '[' (type ',')*? type ']');
 
 statement:
 	for_statement
@@ -22,20 +22,19 @@ expr:
 	| expr ('plus' | 'minus') expr
 	| INT
 	| DECIMAL
-	| WORD
+	| VARIABLE
 	| '(' expr ')';
 
 conditional_statements: (
-		'not'? ('equal to'
-		| 'greater than'
-		| 'less than'
-		| 'less than or equal to'
-		| 'greater than or equal to')
+		'not'? (
+			'equal to'
+			| 'greater than'
+			| 'less than'
+			| 'less than or equal to'
+			| 'greater than or equal to'
+		)
 	);
-condition: (WORD | INT | expr) conditional_statements (
-		WORD | INT
-		| expr
-	);
+condition: varExprOrType conditional_statements varExprOrType;
 
 if_statement: 'is' condition;
 else_statement: 'if not';
@@ -45,13 +44,16 @@ if_block:
 		else_statement if_statement '{' statement '}'
 	)* (else_statement '{' prog '}')?;
 
-for_statement: 'repeat' (INT) statementBlock;
-while_statement: 'while' condition statementBlock;
-statementBlock: '{' (statement | 'continue' | 'break')* '}';
+for_statement: 'repeat' (INT) loopScope;
+while_statement: 'while' condition loopScope;
+loopScope: '{' (statement | 'continue' | 'break')* '}';
+functionScope: '{' statement* | ('return' varExprOrType)* '}';
 
-functionDefinition: 'define' WORD '(' (WORD (',' WORD)*)? ')' statementBlock;
+functionDefinition:
+	'define' VARIABLE '(' (varExprOrType ( ',' varExprOrType)*)? ')' functionScope;
 
-functionCall: WORD '(' (WORD (',' WORD)*)? ')';
+functionCall:
+	VARIABLE '(' (varExprOrType (',' varExprOrType)*)? ')';
 
 input: input_decimal | input_string | input_number;
 
@@ -59,11 +61,16 @@ input_string: 'input string';
 input_number: 'input number';
 input_decimal: 'input decimal';
 
-output: 'print' (STRING | DECIMAL | INT | WORD);
+output: 'print' varExprOrType;
 
-STRING: '"' ( ~["] )* '"';
-INT: '-'?[0-9]+;
-DECIMAL: '-'?[0-9]* '.' [0-9]*;
-WORD: ([a-z] | [A-Z])+;
-COMMENT_LINE: '*' ~[\n\r]* -> skip; // skip comments
-WHITESPACE: [ \r\n\t]+ -> skip; // skip extra white space
+varExprOrType: expr | VARIABLE type;
+type: INT | STRING | DECIMAL;
+
+STRING: '"' ( ~["])* '"';
+INT: '-'? [0-9]+;
+DECIMAL: '-'? [0-9]* '.' [0-9]*;
+VARIABLE: ([a-z] | [A-Z])+;
+COMMENT_LINE: '*' ~[\n\r]* -> skip;
+// skip comments
+WHITESPACE: [ \r\n\t]+ -> skip;
+// skip extra white space
