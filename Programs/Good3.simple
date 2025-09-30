@@ -2,6 +2,8 @@ x = 20 plus 50 *Adds two intergers together
 y = 3.6 plus 4.5 *Adds two decimals together
 z = 35
 define addTwoNumbers (numOne, numTwo) {
+    i=999
     num1 plus num2
 }
-addTwoNumbers (x, z) *Adds x and z together
+t=3
+addTwoNumbers (x, z) * Adds x and z together
