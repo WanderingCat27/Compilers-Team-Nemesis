@@ -3,10 +3,17 @@ grammar Simple;
 @header { import java.util.*; }
 
 @members {
+  class Types {
+    static String STRING = "string";
+    static String INT = "int";
+    static String DOUBLE = "double";
+  }
+
   /** Identifier type */
   class Identifier {
     String id;
     float value;  // The value of this identifier
+    String type;
     boolean hasKnown; // Is the value known or not
     boolean hasBeenUsed;  // Has the id been used yet
     String scope; // function/global scope
@@ -20,6 +27,7 @@ grammar Simple;
 		  Stack<String> scopeList = new Stack<String>();
 
   String pendingFunctionID = "";
+  String pendingVarType = "";
 
   String getScope() {
     return scopeList.peek();
@@ -76,16 +84,40 @@ prog:
 	     printDiagnostics();
   };
 assignment:
-	VARIABLE_NAME '=' varExprOrType {
+	a = VARIABLE_NAME '=' (
+		INT {
+      pendingVarType = Types.INT;
+  }
+		| STRING {
+	      pendingVarType = Types.STRING;
+  }
+		| DECIMAL {
+	      pendingVarType = Types.DOUBLE;
+  }
+		| b = VARIABLE_NAME {
+      Identifier var = mainTable.table.get($b.getText());
+      if(var == null) {
+          error($b, "Error attempting to assign a variable that does not defined");
+      } else {
+      pendingVarType = var.type;
+      }
+  }
+	) {
+    if(pendingVarType == "") {
+      error($b, "invalid assignment, type not found");
+    } else {
+  
       Identifier newID = new Identifier();
-      newID.id = $VARIABLE_NAME.getText();
+      newID.id = $a.getText();
       // newID.value = null; // TODO implement value
+      newID.type = pendingVarType;
+      pendingVarType = "";
       newID.hasKnown = true; // TODO is a variable always known?
       newID.hasBeenUsed = false;
       newID.scope = getScope();
-      System.out.println("Assigning | name: " + newID.id + " value: " + newID.value + " scope: " + newID.scope);
+      System.out.println("Assigning | name: " + newID.id + " value: " + newID.value + " scope: " + newID.scope + " type: " + newID.type);
 	    mainTable.table.put(newID.id, newID);
-
+    }
   };
 array: ( '[' (type ',')*? type ']');
 
