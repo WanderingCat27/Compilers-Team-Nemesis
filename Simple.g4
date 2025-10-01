@@ -12,7 +12,7 @@ grammar Simple;
   /** Identifier type */
   class Identifier {
     String id;
-    float value;  // The value of this identifier
+    String value;  // The value of this identifier
     String type;
     boolean hasKnown; // Is the value known or not
     boolean hasBeenUsed;  // Has the id been used yet
@@ -82,7 +82,8 @@ grammar Simple;
 prog:
 	{
 		  addScope("global");
-    } statement* {
+    } statement*
+	| functionDefinition* {
 	     printDiagnostics();
   };
 assignment:
@@ -116,15 +117,18 @@ assignment:
     if(pendingVarType.equals("")) {
       error($b, "invalid assignment, type not found");
     } else {
-  
-      Identifier newID = new Identifier();
-      newID.id = $a.getText();
-      // newID.value = null; // TODO implement value
+		      Identifier newID = mainTable.table.get($a.getText());
+      if(newID == null) {
+        newID = new Identifier();
+        newID.scope = getScope();
+        newID.id = $a.getText();
+        newID.hasBeenUsed = false;
+      } 
+      newID.value = $b.getText();
       newID.type = pendingVarType;
       pendingVarType = "";
+
       newID.hasKnown = true; // TODO is a variable always known?
-      newID.hasBeenUsed = false;
-      newID.scope = getScope();
       System.out.println("Assigning | name: " + newID.id + " value: " + newID.value + " scope: " + newID.scope + " type: " + newID.type);
 	    mainTable.table.put(newID.id, newID);
     }
@@ -138,7 +142,6 @@ statement:
 	| if_else
 	| assignment
 	| condition
-	| functionDefinition
 	| functionCall
 	| array
 	| output;
@@ -205,10 +208,11 @@ input_decimal: 'input decimal';
 output: 'print' varExprOrType;
 
 varExprOrType: expr | VARIABLE_NAME type;
-type: INT | STRING | DECIMAL;
+type: INT | STRING | DECIMAL | BOOL;
 
 STRING: '"' ( ~["])* '"';
 INT: '-'? [0-9]+;
+BOOL: 'True' | 'False';
 DECIMAL: '-'? [0-9]* '.' [0-9]*;
 VARIABLE_NAME: ([a-z] | [A-Z])+;
 COMMENT_LINE: '*' ~[\n\r]* -> skip;
