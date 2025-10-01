@@ -1,0 +1,3 @@
+x= 2
+y= x plus 2
+print 10
