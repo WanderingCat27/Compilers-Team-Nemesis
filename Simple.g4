@@ -96,14 +96,19 @@ assignment:
   }
 		| b = VARIABLE_NAME {
       Identifier var = mainTable.table.get($b.getText());
-      if(var == null && var.scope != "global" && var.scope != getScope()) {
-          error($b, "Error attempting to assign a variable that is not defined");
+      if(var == null || (var.scope != "global" && var.scope != getScope())) {
+          error($b, "Error attempting to assign a variable that is not defined or out of scope");
+          pendingVarType = "not defined";
       } else {
-      pendingVarType = var.type;
+        pendingVarType = var.type;
       }
   }
 	) {
-    if(pendingVarType == "") {
+    if(pendingVarType.equals("not defined")) {
+      // skip
+      pendingVarType = "";
+    } else 
+    if(pendingVarType.equals("")) {
       error($b, "invalid assignment, type not found");
     } else {
   

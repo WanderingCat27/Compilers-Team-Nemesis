@@ -5,3 +5,9 @@ x=y
 s="test"
 b=s
 d=2.3
+
+define a() {
+    cc="t"
+}
+
+ccc=cc
