@@ -76,15 +76,24 @@ prog:
 	     printDiagnostics();
   };
 assignment:
-	VARIABLE_NAME '=' varExprOrType {
-      Identifier newID = new Identifier();
-      newID.id = $VARIABLE_NAME.getText();
+	VARIABLE_NAME
+		{
+			pendingLHS = $VARIABLE_NAME.getText();
+      		lhsExistedBefore = assigned.contains(pendingLHS);
+		} '=' varExprOrType {
+	  // Successful RHS parse: consider variable now assigned.
+      assigned.add(pendingLHS);
+      // Clear LHS context.
+      pendingLHS = null;
+
+      //Identifier newID = new Identifier();
+      //newID.id = $VARIABLE_NAME.getText();
       // newID.value = null; // TODO implement value
-      newID.hasKnown = true; // TODO is a variable always known?
-      newID.hasBeenUsed = false;
-      newID.scope = getScope();
-      System.out.println("Assigning | name: " + newID.id + " value: " + newID.value + " scope: " + newID.scope);
-	    mainTable.table.put(newID.id, newID);
+      //newID.hasKnown = true; // TODO is a variable always known?
+      //newID.hasBeenUsed = false;
+      //newID.scope = getScope();
+      //System.out.println("Assigning | name: " + newID.id + " value: " + newID.value + " scope: " + newID.scope);
+	    //mainTable.table.put(newID.id, newID);
 
   };
 array: ( '[' (type ',')*? type ']');
@@ -101,12 +110,58 @@ statement:
 	| array
 	| output;
 
-expr:
-	expr ('multiply' | 'divide' | 'mod') expr
-	| expr ('plus' | 'minus') expr
-	| INT
-	| DECIMAL
-	| VARIABLE_NAME
+expr returns [boolean hasKnownValue, float value]
+	: a=expr { 
+    if ($a.hasKnownValue) {
+        $hasKnownValue = true;
+        $value = $a.value;
+      } else {
+        $hasKnownValue = false;
+      }
+  }
+	expr (op=('multiply' | 'divide' | 'mod') b=expr
+		{
+			if ($b.hasKnownValue && $op.getText().equals("divide") && $b.value == 0) {
+          error($op, "division by zero");
+          $hasKnownValue = false;  // Error anyway so stopping there
+        } else if ($hasKnownValue && $b.hasKnownValue) {
+          if ($op.getText().equals("multiply")) {
+            $value = $value * $b.value;
+          } else {
+            $value = $value / $b.value;
+          }
+        } else {
+          $hasKnownValue = false;
+        }
+		}
+	) expr
+	| expr (op=('plus' | 'minus') b=expr
+	{
+      if ($hasKnownValue && $b.hasKnownValue) {
+        if ($op.getText().equals("plus")) {
+          $value = $value + $b.value;
+        } else {
+          $value = $value - $b.value;
+        }
+      } else {
+        $hasKnownValue = false;
+      }	
+    }
+	) expr
+	| INT { $hasKnownValue = true; $value = Integer.parseInt($INT.getText()); }
+	| DECIMAL { $hasKnownValue = true; $value = Integer.parseInt($DECIMAL.getText()); }
+	| VARIABLE_NAME {
+        String id = $VARIABLE_NAME.getText();
+        used.add(id);
+        // If we're in the middle of first assignment to VARIABLE_NAME (self-reference):
+        if (pendingLHS != null && !lhsExistedBefore && id.equals(pendingLHS)) {
+          error($VARIABLE_NAME, "self-reference on first assignment of '" + pendingLHS + "'");
+        } else if (!assigned.contains(id)) {
+          // General use-before-assign.
+          error($VARIABLE_NAME, "use of variable '" + id + "' before assignment");
+        }
+        $hasKnownValue = false;
+  }
 	| '(' expr ')';
 
 conditional_statement: (
@@ -156,7 +211,19 @@ input_string: 'input string';
 input_number: 'input number';
 input_decimal: 'input decimal';
 
-output: 'print' varExprOrType;
+//output: 'print' varExprOrType;
+output: 'print' expr
+  {
+  if ($expr.hasKnownValue) {
+        // Let us print it out (for debugging purposes really)
+        System.out.println("DEBUG: Line " +  ": Printing known value: " + $expr.value);
+      } else {
+        System.out.println("DEBUG: Line " +  ": Can't print this value. Need to evaluate further.");
+      }
+  }
+;
+
+KW_PRINT : 'print';
 
 varExprOrType: expr | VARIABLE_NAME type;
 type: INT | STRING | DECIMAL;
