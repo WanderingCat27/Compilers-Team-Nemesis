@@ -87,13 +87,13 @@ prog:
   };
 assignment:
 	a = VARIABLE_NAME '=' (
-		INT {
+		b = INT {
       pendingVarType = Types.INT;
   }
-		| STRING {
+		| b = STRING {
 	      pendingVarType = Types.STRING;
   }
-		| DECIMAL {
+		| b = DECIMAL {
 	      pendingVarType = Types.DOUBLE;
   }
 		| b = VARIABLE_NAME {
