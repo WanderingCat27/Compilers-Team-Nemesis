@@ -75,11 +75,13 @@ grammar Simple;
       for (String d : diagnostics) {
         System.err.println("error: " + d);
       }
+
+      System.out.println();
   }
 }
 prog:
 	{
-		  addScope("Global");
+		  addScope("global");
     } statement* {
 	     printDiagnostics();
   };
@@ -96,10 +98,13 @@ assignment:
   }
 		| b = VARIABLE_NAME {
       Identifier var = mainTable.table.get($b.getText());
-      if(var == null || (var.scope != "global" && var.scope != getScope())) {
-          error($b, "Error attempting to assign a variable that is not defined or out of scope");
+      if(var == null) {
+          error($b, "Error attempting to assign a variable that is not defined");
           pendingVarType = "not defined";
-      } else {
+	      } else if (var.scope != "global" && var.scope != getScope()){
+		        error($b, "Error attempting to assign a variable that is not defined (there is a variable defined that is out of scope)");
+          pendingVarType = "not defined";
+        } else {
         pendingVarType = var.type;
       }
   }
@@ -178,10 +183,14 @@ functionScope:
 
 functionDefinition:
 	'define' VARIABLE_NAME {
+    if(getScope() != "global") {
+      error($VARIABLE_NAME, "Functions must be defined in global scope, function cannot be defined within functions");
+    } else {
 	    if(pendingFunctionID != "") {
         System.err.println("function name already pending"); // TODO ? is this necessary
       }
 	    pendingFunctionID = $VARIABLE_NAME.getText();
+    }
    } '(' (varExprOrType ( ',' varExprOrType)*)? ')' functionScope;
 
 functionCall:
