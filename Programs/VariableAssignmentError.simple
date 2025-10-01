@@ -10,4 +10,4 @@ define a() {
     cc="t"
 }
 
-ccc=cc
+ccc=cc * cc out of scope
