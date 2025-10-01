@@ -96,8 +96,8 @@ assignment:
   }
 		| b = VARIABLE_NAME {
       Identifier var = mainTable.table.get($b.getText());
-      if(var == null) {
-          error($b, "Error attempting to assign a variable that does not defined");
+      if(var == null && var.scope != "global" && var.scope != getScope()) {
+          error($b, "Error attempting to assign a variable that is not defined");
       } else {
       pendingVarType = var.type;
       }
