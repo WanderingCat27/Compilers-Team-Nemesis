@@ -1,0 +1,7 @@
+x=y * y is not defined
+
+y=10
+x=y
+s="test"
+b=s
+d=2.3
