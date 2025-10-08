@@ -171,11 +171,6 @@ assignment
 		| b = DECIMAL {
 	      pendingVarType = Types.DOUBLE;
   }
-		| c = expr { // TODO : evaluate type of expressions
-	    pendingVarType = Types.DOUBLE;
-      System.out.println("Assigning ExpreSsion: " + $c.text);
-	    $exprString = $c.text;
-  }
 		| b = VARIABLE_NAME {
       Identifier var = getVariable($b.getText());
       if(var == null) {
@@ -185,37 +180,55 @@ assignment
 		        error($b, "Error attempting to assign a variable that is not defined (there is a variable defined that is out of scope)");
           pendingVarType = "not defined";
         } else {
-        pendingVarType = var.type;
+        pendingVarType = "VARIABLE";
       }
+  }
+		| c = expr { // TODO : evaluate type of expressions
+	    pendingVarType = Types.DOUBLE;
+	    $exprString = $c.text;
   }
 	) {
     if(pendingVarType.equals("not defined")) {
-      // skip
       pendingVarType = "";
     } else 
     if(pendingVarType.equals("")) {
       error($b, "invalid assignment, type not found");
     } else {
-		  Identifier newID = getVariable($a.getText());
-      String value;
-	      if($exprString != "") {
-	        value = $exprString;
-      } else {
-        value = $b.getText();
-      }
       String type = pendingVarType;
+      String value;
+	      if($exprString == null) {
+	          value = $b.getText();
+        } else {
+          value = $exprString;
+        }
       pendingVarType = "";
-
+      if(type.equals("VARIABLE")) {
+        Identifier var = getVariable($b.getText());
+        type = var.type;
+        value = var.value;
+      }
+      boolean success = true;
+      Identifier newID = getVariable($a.getText());
       if(newID == null) {
 	        newID = createVariable($a.getText(), value, type);
-      } else {
+      } else 
+        if(!type.equals(newID.type)){ // mismatch type to an existing variable
+          success = false;
+          error($exprString == "" ? $b : $a, "invalid assignment, type does not match");
+        }
+      if(success == true){
         newID.value = value;
-        newID.type = type;
-      }
+        pendingVarType = "";
 
-      newID.hasKnown = true; // TODO is a variable always known?
-      System.out.println("Assigning | name: " + newID.id + " | value: " + newID.value + " | scope: " + newID.scope + " | Level: " + newID.scopeLevel + " | type: " + newID.type);
+        if(newID == null) {
+            newID = createVariable($a.getText(), value, type);
+        } else {
+          newID.value = value;
+          newID.type = type;
+        }
+        System.out.println("Assigning | name: " + newID.id + " | value: " + newID.value + " | scope: " + newID.scope + " | Level: " + newID.scopeLevel + " | type: " + newID.type);
     }
+  }
   };
 array: ( '[' (type ',')*? type ']');
 
@@ -232,31 +245,15 @@ statement:
 
 expr
 	returns[boolean hasKnownValue, float value]:
-	a = expr { 
-    if ($a.hasKnownValue) {
+	a = word {
+      if ($a.hasKnownValue) {
         $hasKnownValue = true;
         $value = $a.value;
       } else {
         $hasKnownValue = false;
-      }
-  } expr (
-		op = ('multiply' | 'divide' | 'mod') b = expr {
-			if ($b.hasKnownValue && $op.getText().equals("divide") && $b.value == 0) {
-          error($op, "division by zero");
-          $hasKnownValue = false;  // Error anyway so stopping there
-        } else if ($hasKnownValue && $b.hasKnownValue) {
-          if ($op.getText().equals("multiply")) {
-            $value = $value * $b.value;
-          } else {
-            $value = $value / $b.value;
-          }
-        } else {
-          $hasKnownValue = false;
-        }
-		}
-	) expr
-	| expr (
-		op = ('plus' | 'minus') b = expr {
+      } 
+    } (
+		op = ('plus' | 'minus') b = word {
       if ($hasKnownValue && $b.hasKnownValue) {
         if ($op.getText().equals("plus")) {
           $value = $value + $b.value;
@@ -265,22 +262,55 @@ expr
         }
       } else {
         $hasKnownValue = false;
-      }	
+      }
     }
-	) expr
-	| INT { $hasKnownValue = true; $value = Integer.parseInt($INT.getText()); }
-	| DECIMAL { $hasKnownValue = true; $value = Integer.parseInt($DECIMAL.getText()); }
+	)*;
+
+word
+	returns[boolean hasKnownValue, float value]:
+	a = factor {
+      if ($a.hasKnownValue) {
+        $hasKnownValue = true;
+        $value = $a.value;
+      } else $hasKnownValue = false;
+    } (
+		op = ('multiply' | 'divide' | 'mod') b = factor {
+        if ($b.hasKnownValue && $op.getText().equals("divide") && $b.value == 0) {
+          $hasKnownValue = false;
+        } else if ($hasKnownValue && $b.hasKnownValue) {
+          if ($op.getText().equals("multiply")) {
+            $value = $value * $b.value;
+          } else if ($op.getText().equals("divide")){
+            $value = $value / $b.value;
+          }
+        } else {
+          $hasKnownValue = false;
+        }
+      }
+	)*;
+
+factor
+	returns[boolean hasKnownValue, float value]:
+	INT { $hasKnownValue = true; $value = Integer.parseInt($INT.getText()); }
+	| DECIMAL {$hasKnownValue = true; $value = Float.parseFloat($DECIMAL.getText());}
 	| VARIABLE_NAME {
         String id = $VARIABLE_NAME.getText();
         used.add(id);
         // If we're in the middle of first assignment to VARIABLE_NAME (self-reference):
-        if (!assigned.contains(id)) {
+        if (!doesVariableExist(id)) {
           // General use-before-assign.
           error($VARIABLE_NAME, "use of variable '" + id + "' before assignment");
         }
-        $hasKnownValue = false;
-  }
-	| '(' expr ')';
+        $hasKnownValue = false;  // For now...
+      }
+	| '(' expr ')' { 
+        if ($expr.hasKnownValue) {
+          $hasKnownValue = true;
+          $value = $expr.value;
+        } else {
+          $hasKnownValue = false;
+        }
+      };
 
 conditional_statement: (
 		'not'? (
@@ -341,15 +371,13 @@ input_decimal: 'input decimal';
 //output: 'print' varExprOrType;
 output:
 	'print' expr {
-	  if ($expr.hasKnownValue) {
+  if ($expr.hasKnownValue) {
         // Let us print it out (for debugging purposes really)
         System.out.println("DEBUG: Line " +  ": Printing known value: " + $expr.value);
       } else {
         System.out.println("DEBUG: Line " +  ": Can't print this value. Need to evaluate further.");
       }
   };
-
-KW_PRINT: 'print';
 
 varExprOrType: expr | VARIABLE_NAME type;
 type: INT | STRING | DECIMAL | BOOL;

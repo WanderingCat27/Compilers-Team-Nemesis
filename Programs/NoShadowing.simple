@@ -11,6 +11,7 @@ define f() {
         in_if="in if (level 2)" 
     }
     * if has ended so everything in if scope is removed from memory; this will define a completely new variable
+    c=in_if
     in_if=1
 }
 

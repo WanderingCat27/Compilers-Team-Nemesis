@@ -1,4 +1,4 @@
-x = 20 plus 50 *Adds two intergers together
+x = x plus 50 *Adds two intergers together
 y = 3.6 plus 4.5 *Adds two decimals together
 z = 35
 define addTwoNumbers (numOne, numTwo) {
