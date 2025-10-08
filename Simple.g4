@@ -61,7 +61,11 @@ grammar Simple;
   }
 
   int getScopeLevel() {
-		  return scopedSymbolTable.get(currScope).size();
+		    ArrayList<SymbolTable> tables = scopedSymbolTable.get(getScope());
+      if(tables.size() == 0) {
+        return addScopeLevel();
+      }
+      return tables.size();
   }
 
   int addScopeLevel() {
@@ -286,14 +290,19 @@ condition: varExprOrType conditional_statement varExprOrType;
 if_statement: 'is' condition;
 else_statement: 'if not';
 
+if_scope: '{' {addScopeLevel();} prog '}' {removeScopeLevel();};
+
 if_else:
-	if_statement '{' statement '}' (
-		else_statement if_statement '{' statement '}'
-	)* (else_statement '{' prog '}')?;
+	if_statement if_scope (else_statement if_statement if_scope)* (
+		else_statement if_scope
+	)?;
 
 for_statement: 'repeat' (INT) loopScope;
 while_statement: 'while' condition loopScope;
-loopScope: '{' (statement | 'continue' | 'break')* '}';
+loopScope:
+	'{' {
+	  addScopeLevel();
+} (statement | 'continue' | 'break')* '}' {removeScopeLevel();};
 functionScope:
 	'{' { 
 	  setMainScope(pendingFunctionID);
@@ -343,7 +352,7 @@ STRING: '"' ( ~["])* '"';
 INT: '-'? [0-9]+;
 BOOL: 'True' | 'False';
 DECIMAL: '-'? [0-9]* '.' [0-9]*;
-VARIABLE_NAME: ([a-z] | [A-Z])+;
+VARIABLE_NAME: ([a-z] | [A-Z] | '_')+;
 COMMENT_LINE: '*' ~[\n\r]* -> skip;
 // skip comments
 WHITESPACE: [ \r\n\t]+ -> skip;
