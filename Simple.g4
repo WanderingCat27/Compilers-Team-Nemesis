@@ -82,8 +82,7 @@ grammar Simple;
 prog:
 	{
 		  addScope("global");
-    } statement*
-	| functionDefinition* {
+    } (statement | functionDefinition)* {
 	     printDiagnostics();
   };
 assignment:
@@ -117,13 +116,22 @@ assignment:
     if(pendingVarType.equals("")) {
       error($b, "invalid assignment, type not found");
     } else {
+      boolean success = true;
 		      Identifier newID = mainTable.table.get($a.getText());
       if(newID == null) {
         newID = new Identifier();
         newID.scope = getScope();
         newID.id = $a.getText();
         newID.hasBeenUsed = false;
-      } 
+      } else {
+        if(pendingVarType.equals(newID.type)){
+        } else {
+          success = false;
+          error($b, "invalid assignment, type does not match");
+          System.out.println("Error");
+        }
+      }
+      if(success == true){
       newID.value = $b.getText();
       newID.type = pendingVarType;
       pendingVarType = "";
@@ -131,6 +139,7 @@ assignment:
       newID.hasKnown = true; // TODO is a variable always known?
       System.out.println("Assigning | name: " + newID.id + " value: " + newID.value + " scope: " + newID.scope + " type: " + newID.type);
 	    mainTable.table.put(newID.id, newID);
+      }
     }
   };
 array: ( '[' (type ',')*? type ']');
@@ -146,17 +155,17 @@ statement:
 	| array
 	| output;
 
-expr returns [boolean hasKnownValue, float value]
-	: a=expr { 
+expr
+	returns[boolean hasKnownValue, float value]:
+	a = expr { 
     if ($a.hasKnownValue) {
         $hasKnownValue = true;
         $value = $a.value;
       } else {
         $hasKnownValue = false;
       }
-  }
-	expr (op=('multiply' | 'divide' | 'mod') b=expr
-		{
+  } expr (
+		op = ('multiply' | 'divide' | 'mod') b = expr {
 			if ($b.hasKnownValue && $op.getText().equals("divide") && $b.value == 0) {
           error($op, "division by zero");
           $hasKnownValue = false;  // Error anyway so stopping there
@@ -171,8 +180,8 @@ expr returns [boolean hasKnownValue, float value]
         }
 		}
 	) expr
-	| expr (op=('plus' | 'minus') b=expr
-	{
+	| expr (
+		op = ('plus' | 'minus') b = expr {
       if ($hasKnownValue && $b.hasKnownValue) {
         if ($op.getText().equals("plus")) {
           $value = $value + $b.value;
@@ -252,18 +261,17 @@ input_number: 'input number';
 input_decimal: 'input decimal';
 
 //output: 'print' varExprOrType;
-output: 'print' expr
-  {
+output:
+	'print' expr {
   if ($expr.hasKnownValue) {
         // Let us print it out (for debugging purposes really)
         System.out.println("DEBUG: Line " +  ": Printing known value: " + $expr.value);
       } else {
         System.out.println("DEBUG: Line " +  ": Can't print this value. Need to evaluate further.");
       }
-  }
-;
+  };
 
-KW_PRINT : 'print';
+KW_PRINT: 'print';
 
 varExprOrType: expr | VARIABLE_NAME type;
 type: INT | STRING | DECIMAL | BOOL;
