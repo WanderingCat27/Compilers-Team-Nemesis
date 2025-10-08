@@ -1,0 +1,10 @@
+a = "a"
+
+b=1
+
+define f() {
+    c=7
+    a="not a"
+}
+
+b=c
