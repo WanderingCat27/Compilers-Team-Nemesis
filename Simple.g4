@@ -218,7 +218,7 @@ factor returns [boolean hasKnownValue, float value]
         } else if (!assigned.contains(id)) {
           error($VARIABLE_NAME, "use of variable '" + id + "' before assignment");
         }
-        $hasKnownValue = false;  // For now...
+        $hasKnownValue = false;
       }
   | '(' expr ')' 
       { 
