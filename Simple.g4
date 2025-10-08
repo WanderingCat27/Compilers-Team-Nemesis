@@ -82,8 +82,7 @@ grammar Simple;
 prog:
 	{
 		  addScope("global");
-    } statement*
-	| functionDefinition* {
+    } (statement | functionDefinition)* {
 	     printDiagnostics();
   };
 assignment:
