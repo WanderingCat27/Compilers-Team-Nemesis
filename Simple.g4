@@ -167,7 +167,7 @@ expr returns [boolean hasKnownValue, float value]
           $hasKnownValue = false;
         }
 		}
-	) expr
+	)*? expr
 	| expr (op=('plus' | 'minus') b=expr
 	{
       if ($hasKnownValue && $b.hasKnownValue) {
@@ -180,7 +180,7 @@ expr returns [boolean hasKnownValue, float value]
         $hasKnownValue = false;
       }	
     }
-	) expr
+	)*? expr
 	| INT { $hasKnownValue = true; $value = Integer.parseInt($INT.getText()); }
 	| DECIMAL { $hasKnownValue = true; $value = Integer.parseInt($DECIMAL.getText()); }
 	| VARIABLE_NAME {
