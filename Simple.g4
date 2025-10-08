@@ -377,6 +377,7 @@ output:
       } else {
         System.out.println("DEBUG: Line " +  ": Can't print this value. Need to evaluate further.");
       }
+    // TODO add code for STRING VARIABLES etc
   };
 
 varExprOrType: expr | VARIABLE_NAME type;

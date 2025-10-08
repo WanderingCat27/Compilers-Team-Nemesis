@@ -1,6 +1,6 @@
 * print numbers 1-10 & skip 3
 
-i=1
+i=1.0
 repeat 10 {
     is i not equal to 3 {
         print i
