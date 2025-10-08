@@ -117,13 +117,23 @@ assignment:
     if(pendingVarType.equals("")) {
       error($b, "invalid assignment, type not found");
     } else {
+      boolean success = false;
 		      Identifier newID = mainTable.table.get($a.getText());
       if(newID == null) {
         newID = new Identifier();
         newID.scope = getScope();
         newID.id = $a.getText();
         newID.hasBeenUsed = false;
-      } 
+      } else {
+        if(pendingVarType.equals(newID.type)){
+          success = true;
+        } else {
+          success = false;
+          error($b, "invalid assignment, type does not match");
+          System.out.println("Error");
+        }
+      }
+      if(success == true){
       newID.value = $b.getText();
       newID.type = pendingVarType;
       pendingVarType = "";
@@ -131,6 +141,7 @@ assignment:
       newID.hasKnown = true; // TODO is a variable always known?
       System.out.println("Assigning | name: " + newID.id + " value: " + newID.value + " scope: " + newID.scope + " type: " + newID.type);
 	    mainTable.table.put(newID.id, newID);
+      }
     }
   };
 array: ( '[' (type ',')*? type ']');
