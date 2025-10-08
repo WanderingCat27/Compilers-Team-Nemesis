@@ -117,7 +117,7 @@ assignment:
     if(pendingVarType.equals("")) {
       error($b, "invalid assignment, type not found");
     } else {
-      boolean success = false;
+      boolean success = true;
 		      Identifier newID = mainTable.table.get($a.getText());
       if(newID == null) {
         newID = new Identifier();
@@ -126,7 +126,6 @@ assignment:
         newID.hasBeenUsed = false;
       } else {
         if(pendingVarType.equals(newID.type)){
-          success = true;
         } else {
           success = false;
           error($b, "invalid assignment, type does not match");
@@ -157,17 +156,17 @@ statement:
 	| array
 	| output;
 
-expr returns [boolean hasKnownValue, float value]
-	: a=expr { 
+expr
+	returns[boolean hasKnownValue, float value]:
+	a = expr { 
     if ($a.hasKnownValue) {
         $hasKnownValue = true;
         $value = $a.value;
       } else {
         $hasKnownValue = false;
       }
-  }
-	expr (op=('multiply' | 'divide' | 'mod') b=expr
-		{
+  } expr (
+		op = ('multiply' | 'divide' | 'mod') b = expr {
 			if ($b.hasKnownValue && $op.getText().equals("divide") && $b.value == 0) {
           error($op, "division by zero");
           $hasKnownValue = false;  // Error anyway so stopping there
@@ -182,8 +181,8 @@ expr returns [boolean hasKnownValue, float value]
         }
 		}
 	) expr
-	| expr (op=('plus' | 'minus') b=expr
-	{
+	| expr (
+		op = ('plus' | 'minus') b = expr {
       if ($hasKnownValue && $b.hasKnownValue) {
         if ($op.getText().equals("plus")) {
           $value = $value + $b.value;
@@ -263,18 +262,17 @@ input_number: 'input number';
 input_decimal: 'input decimal';
 
 //output: 'print' varExprOrType;
-output: 'print' expr
-  {
+output:
+	'print' expr {
   if ($expr.hasKnownValue) {
         // Let us print it out (for debugging purposes really)
         System.out.println("DEBUG: Line " +  ": Printing known value: " + $expr.value);
       } else {
         System.out.println("DEBUG: Line " +  ": Can't print this value. Need to evaluate further.");
       }
-  }
-;
+  };
 
-KW_PRINT : 'print';
+KW_PRINT: 'print';
 
 varExprOrType: expr | VARIABLE_NAME type;
 type: INT | STRING | DECIMAL | BOOL;
