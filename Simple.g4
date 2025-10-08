@@ -26,17 +26,6 @@ grammar Simple;
 
 // matches the name of a variable to the identifier
   class SymbolTable extends HashMap<String, Identifier> {
-    public int level = 0;
-    void addLevel() {
-      level +=1;
-    }
-    void removeLevel() {
-      level -=1;
-    }
-
-    int getLevel() {
-      return level;
-    }
   }
 
 
@@ -74,7 +63,22 @@ grammar Simple;
   int getScopeLevel() {
 		  return scopedSymbolTable.get(currScope).size();
   }
-	
+
+  int addScopeLevel() {
+	    ArrayList<SymbolTable> tables = scopedSymbolTable.get(getScope());
+      tables.add(new SymbolTable());
+      return tables.size();
+  }
+
+  void removeScopeLevel() {
+    ArrayList<SymbolTable> tables = scopedSymbolTable.get(getScope());
+    if(tables.size() > 0) {
+      tables.remove(tables.size()-1);
+    }
+  }
+
+  
+
   SymbolTable getCurrSymbolTableAtCurrLevel() {
 	    ArrayList<SymbolTable> tables = scopedSymbolTable.get(getScope());
       if(tables.size() == 0) {
@@ -200,7 +204,7 @@ assignment:
       }
 
       newID.hasKnown = true; // TODO is a variable always known?
-      System.out.println("Assigning | name: " + newID.id + " | value: " + newID.value + " | scope: " + newID.scope + " | type: " + newID.type);
+      System.out.println("Assigning | name: " + newID.id + " | value: " + newID.value + " | scope: " + newID.scope + " | Level: " + newID.scopeLevel + " | type: " + newID.type);
     }
   };
 array: ( '[' (type ',')*? type ']');
