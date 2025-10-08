@@ -130,10 +130,11 @@ grammar Simple;
       return null;
   }
 
+  
 
-
-  /** Variables that have been assigned at least once. */
-  Set<String> assigned = new HashSet<>();
+  boolean doesVariableExist(String varName) {
+    return getVariable(varName) != null;
+  }
 
   /** Variables that appear in any expression or print (i.e., used). */
   Set<String> used = new HashSet<>();
@@ -148,15 +149,9 @@ grammar Simple;
 
   void printDiagnostics() {
       // After parsing the whole file: report unused variables and print errors.
-      for (String v : assigned) {
-        if (!used.contains(v)) {
-          System.err.println("warning: variable '" + v + "' assigned but never used");
-        }
-      }
       for (String d : diagnostics) {
         System.err.println("error: " + d);
       }
-      getVariable("");
       System.out.println();
   }
 }
@@ -164,7 +159,8 @@ prog:
 	(statement | functionDefinition)* {
 	     printDiagnostics();
   };
-assignment:
+assignment
+	locals[String exprString]:
 	a = VARIABLE_NAME '=' (
 		b = INT {
       pendingVarType = Types.INT;
@@ -174,6 +170,11 @@ assignment:
   }
 		| b = DECIMAL {
 	      pendingVarType = Types.DOUBLE;
+  }
+		| c = expr { // TODO : evaluate type of expressions
+	    pendingVarType = Types.DOUBLE;
+      System.out.println("Assigning ExpreSsion: " + $c.text);
+	    $exprString = $c.text;
   }
 		| b = VARIABLE_NAME {
       Identifier var = getVariable($b.getText());
@@ -196,7 +197,12 @@ assignment:
       error($b, "invalid assignment, type not found");
     } else {
 		  Identifier newID = getVariable($a.getText());
-      String value = $b.getText();
+      String value;
+	      if($exprString != "") {
+	        value = $exprString;
+      } else {
+        value = $b.getText();
+      }
       String type = pendingVarType;
       pendingVarType = "";
 
@@ -335,7 +341,7 @@ input_decimal: 'input decimal';
 //output: 'print' varExprOrType;
 output:
 	'print' expr {
-  if ($expr.hasKnownValue) {
+	  if ($expr.hasKnownValue) {
         // Let us print it out (for debugging purposes really)
         System.out.println("DEBUG: Line " +  ": Printing known value: " + $expr.value);
       } else {
