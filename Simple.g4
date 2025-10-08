@@ -82,8 +82,7 @@ grammar Simple;
 prog:
 	{
 		  addScope("global");
-    } statement*
-	| functionDefinition* {
+    } (statement | functionDefinition)* {
 	     printDiagnostics();
   };
 assignment:
@@ -117,13 +116,22 @@ assignment:
     if(pendingVarType.equals("")) {
       error($b, "invalid assignment, type not found");
     } else {
+      boolean success = true;
 		      Identifier newID = mainTable.table.get($a.getText());
       if(newID == null) {
         newID = new Identifier();
         newID.scope = getScope();
         newID.id = $a.getText();
         newID.hasBeenUsed = false;
-      } 
+      } else {
+        if(pendingVarType.equals(newID.type)){
+        } else {
+          success = false;
+          error($b, "invalid assignment, type does not match");
+          System.out.println("Error");
+        }
+      }
+      if(success == true){
       newID.value = $b.getText();
       newID.type = pendingVarType;
       pendingVarType = "";
@@ -131,6 +139,7 @@ assignment:
       newID.hasKnown = true; // TODO is a variable always known?
       System.out.println("Assigning | name: " + newID.id + " value: " + newID.value + " scope: " + newID.scope + " type: " + newID.type);
 	    mainTable.table.put(newID.id, newID);
+      }
     }
   };
 array: ( '[' (type ',')*? type ']');
@@ -179,14 +188,14 @@ word returns [boolean hasKnownValue, float value]
         $value = $a.value;
       } else $hasKnownValue = false;
     }
-  (op=('multiply'|'divide') b=factor
+  (op=('multiply'|'divide' | 'mod') b=factor
     {
         if ($b.hasKnownValue && $op.getText().equals("divide") && $b.value == 0) {
           $hasKnownValue = false;
         } else if ($hasKnownValue && $b.hasKnownValue) {
           if ($op.getText().equals("multiply")) {
             $value = $value * $b.value;
-          } else {
+          } else if ($op.getText().equals("divide")){
             $value = $value / $b.value;
           }
         } else {
@@ -274,16 +283,15 @@ input_number: 'input number';
 input_decimal: 'input decimal';
 
 //output: 'print' varExprOrType;
-output: 'print' expr
-  {
+output:
+	'print' expr {
   if ($expr.hasKnownValue) {
         // Let us print it out (for debugging purposes really)
         System.out.println("DEBUG: Line " +  ": Printing known value: " + $expr.value);
       } else {
         System.out.println("DEBUG: Line " +  ": Can't print this value. Need to evaluate further.");
       }
-  }
-;
+  };
 
 
 varExprOrType: expr | VARIABLE_NAME type;
