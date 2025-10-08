@@ -147,19 +147,42 @@ statement:
 	| output;
 
 expr returns [boolean hasKnownValue, float value]
-	: a=expr { 
-    if ($a.hasKnownValue) {
+  : a=word
+    {
+      if ($a.hasKnownValue) {
         $hasKnownValue = true;
         $value = $a.value;
       } else {
         $hasKnownValue = false;
+      } 
+    }
+    (op=('plus'|'minus') b=word
+    {
+      if ($hasKnownValue && $b.hasKnownValue) {
+        if ($op.getText().equals("plus")) {
+          $value = $value + $b.value;
+        } else {
+          $value = $value - $b.value;
+        }
+      } else {
+        $hasKnownValue = false;
       }
-  }
-	expr (op=('multiply' | 'divide' | 'mod') b=expr
-		{
-			if ($b.hasKnownValue && $op.getText().equals("divide") && $b.value == 0) {
-          error($op, "division by zero");
-          $hasKnownValue = false;  // Error anyway so stopping there
+    }
+    )*
+  ;
+
+word returns [boolean hasKnownValue, float value]
+  : a=factor 
+    {
+      if ($a.hasKnownValue) {
+        $hasKnownValue = true;
+        $value = $a.value;
+      } else $hasKnownValue = false;
+    }
+  (op=('multiply'|'divide') b=factor
+    {
+        if ($b.hasKnownValue && $op.getText().equals("divide") && $b.value == 0) {
+          $hasKnownValue = false;
         } else if ($hasKnownValue && $b.hasKnownValue) {
           if ($op.getText().equals("multiply")) {
             $value = $value * $b.value;
@@ -169,36 +192,35 @@ expr returns [boolean hasKnownValue, float value]
         } else {
           $hasKnownValue = false;
         }
-		}
-	)*? expr
-	| expr (op=('plus' | 'minus') b=expr
-	{
-      if ($hasKnownValue && $b.hasKnownValue) {
-        if ($op.getText().equals("plus")) {
-          $value = $value + $b.value;
-        } else {
-          $value = $value - $b.value;
-        }
-      } else {
-        $hasKnownValue = false;
-      }	
-    }
-	)*? expr
-	| INT { $hasKnownValue = true; $value = Integer.parseInt($INT.getText()); }
-	| DECIMAL { $hasKnownValue = true; $value = Integer.parseInt($DECIMAL.getText()); }
-	| VARIABLE_NAME {
+      }
+    )*
+  ;
+
+factor returns [boolean hasKnownValue, float value]
+  : INT 
+      { $hasKnownValue = true; $value = Integer.parseInt($INT.getText()); }
+  | DECIMAL {$hasKnownValue = true; $value = Float.parseFloat($DECIMAL.getText());}
+  | VARIABLE_NAME 
+      {
         String id = $VARIABLE_NAME.getText();
         used.add(id);
-        // If we're in the middle of first assignment to VARIABLE_NAME (self-reference):
         if (pendingLHS != null && !lhsExistedBefore && id.equals(pendingLHS)) {
           error($VARIABLE_NAME, "self-reference on first assignment of '" + pendingLHS + "'");
         } else if (!assigned.contains(id)) {
-          // General use-before-assign.
           error($VARIABLE_NAME, "use of variable '" + id + "' before assignment");
         }
-        $hasKnownValue = false;
-  }
-	| '(' expr ')';
+        $hasKnownValue = false;  // For now...
+      }
+  | '(' expr ')' 
+      { 
+        if ($expr.hasKnownValue) {
+          $hasKnownValue = true;
+          $value = $expr.value;
+        } else {
+          $hasKnownValue = false;
+        }
+      }
+  ;
 
 conditional_statement: (
 		'not'? (
@@ -263,7 +285,6 @@ output: 'print' expr
   }
 ;
 
-KW_PRINT : 'print';
 
 varExprOrType: expr | VARIABLE_NAME type;
 type: INT | STRING | DECIMAL | BOOL;
