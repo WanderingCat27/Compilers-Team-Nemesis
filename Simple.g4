@@ -158,78 +158,65 @@ grammar Simple;
 prog:
 	(statement | functionDefinition)* {
 	     printDiagnostics();
-  };
-assignment
-	locals[String exprString]:
-	a = VARIABLE_NAME '=' (
-		b = INT {
-      pendingVarType = Types.INT;
-  }
-		| b = STRING {
-	      pendingVarType = Types.STRING;
-  }
-		| b = DECIMAL {
-	      pendingVarType = Types.DOUBLE;
-  }
-		| b = VARIABLE_NAME {
-      Identifier var = getVariable($b.getText());
-      if(var == null) {
-          error($b, "Error attempting to assign a variable that is not defined");
-          pendingVarType = "not defined";
-	      } else if (var.scope != "global" && var.scope != getScope()){
-		        error($b, "Error attempting to assign a variable that is not defined (there is a variable defined that is out of scope)");
-          pendingVarType = "not defined";
-        } else {
-        pendingVarType = "VARIABLE";
-      }
-  }
-		| c = expr { // TODO : evaluate type of expressions
-	    pendingVarType = Types.DOUBLE;
-	    $exprString = $c.text;
-  }
-	) {
-    if(pendingVarType.equals("not defined")) {
-      pendingVarType = "";
-    } else 
-    if(pendingVarType.equals("")) {
-      error($b, "invalid assignment, type not found");
-    } else {
-      String type = pendingVarType;
-      String value;
-	      if($exprString == null) {
-	          value = $b.getText();
-        } else {
-          value = $exprString;
-        }
-      pendingVarType = "";
-      if(type.equals("VARIABLE")) {
-        Identifier var = getVariable($b.getText());
-        type = var.type;
-        value = var.value;
-      }
-      boolean success = true;
-      Identifier newID = getVariable($a.getText());
-      if(newID == null) {
-	        newID = createVariable($a.getText(), value, type);
-      } else 
-        if(!type.equals(newID.type)){ // mismatch type to an existing variable
-          success = false;
-          error($exprString == "" ? $b : $a, "invalid assignment, type does not match");
-        }
-      if(success == true){
-        newID.value = value;
-        pendingVarType = "";
+	  };
 
-        if(newID == null) {
-            newID = createVariable($a.getText(), value, type);
+assignment
+	locals[String value, String typeOf, boolean isError]:
+	name = VARIABLE_NAME '=' (
+		t = DECIMAL {
+      $typeOf = Types.DOUBLE;
+	      $value = $t.getText();
+    }
+		| t = INT {
+     $typeOf = Types.INT;
+	     $value = $t.getText();
+    }
+		| t = STRING {
+      $typeOf = Types.STRING;
+	    $value = $t.getText();
+    }
+		| e = expr {
+      $typeOf = Types.DOUBLE;
+	      $value = $e.text;
+    }
+		| v = VARIABLE_NAME {
+	      Identifier var = getVariable($v.getText());
+         if(var == null) {
+          error($v, "Error attempting to assign a variable that is not defined");
+          $isError = true;
+      } else if (var.scope != "global" && var.scope != getScope()){
+          error($v, "Error attempting to assign a variable that is not defined (there is a variable defined that is out of scope)");
+          $isError = true;
+      } else {
+	        $value = var.value;    
+        $typeOf = var.type;
+      }
+    }
+	) {
+    if($isError) {
+      System.out.println("Error on: " + $name.getText());
+	    if($typeOf.equals("")) {
+      error($name, "invalid assignment, type not found");
+	      } else if($value.equals("")) {
+	        error($name, "invalid assignment, value not found");
+      }
+    } else {
+      // Get if var already exists
+      Identifier newID = getVariable($name.getText());
+        if(newID != null && !$typeOf.equals(newID.type)){ // mismatch type to an existing variable
+          error($name, "invalid assignment, type does not match");
         } else {
-          newID.value = value;
-          newID.type = type;
+        if(newID == null) { // if not already exists create new var
+	            newID = createVariable($name.getText(), $value, $typeOf);
+        } else { // if already exists then reassign
+	          newID.value = $value;
+          newID.type = $typeOf;
         }
         System.out.println("Assigning | name: " + newID.id + " | value: " + newID.value + " | scope: " + newID.scope + " | Level: " + newID.scopeLevel + " | type: " + newID.type);
     }
-  }
-  };
+    }
+};
+
 array: ( '[' (type ',')*? type ']');
 
 statement:
