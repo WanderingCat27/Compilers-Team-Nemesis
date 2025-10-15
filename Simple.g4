@@ -21,7 +21,6 @@ grammar Simple;
   }
 
   String pendingFunctionID = "";
-  String pendingVarType = "";
 
 
 // matches the name of a variable to the identifier
