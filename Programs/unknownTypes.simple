@@ -1,0 +1,9 @@
+x=4.4
+x=4
+
+define f() {
+    return x
+}
+
+c=f()
+c=4

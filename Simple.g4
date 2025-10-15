@@ -14,13 +14,38 @@ grammar Simple;
   class Identifier {
     String id;
     String value;  // The value of this identifier
-    String type;
+    String type = Types.UNKNOWN;
     boolean hasKnown; // Is the value known or not
     boolean hasBeenUsed;  // Has the id been used yet
     String scope; // function/global scope
     int scopeLevel;
   }
 
+  class FunctionIdentifier {
+    String name;
+    int arity;
+    boolean doesReturn;
+  }
+
+  Map<String, FunctionIdentifier> functionTable = new HashMap();
+
+  FunctionIdentifier getFunction(String name) {
+    return functionTable.get(name);
+  }
+
+  FunctionIdentifier createFunction(String name, int arity, boolean doesReturn) {
+    FunctionIdentifier fid = new FunctionIdentifier();
+    fid.name = name;
+    fid.arity = arity;
+    fid.doesReturn = doesReturn;
+    functionTable.put(name, fid);
+    System.out.println("Created func: name: " + name + " | arity: " + arity + " | doesReturn: " + doesReturn);
+    return fid;
+  }
+
+  boolean doesFunctionExist(String name) {
+    return getFunction(name) != null;
+  }
 
 
 
@@ -58,10 +83,6 @@ grammar Simple;
 
   String getScope() {
     return currScope;
-  }
-
-  boolean doesFunctionExist(String functionName) {
-	    return scopedSymbolTable.get(getScope()) == null;
   }
 
   int getScopeLevel() {
@@ -179,6 +200,18 @@ assignment
       $typeOf = Types.STRING;
 	    $value = $t.getText();
     }
+		| f = functionCall {
+      if(!$f.isSuccess) {
+        $isError = true;
+      } else if(!$f.doesReturn){
+        $isError = true;
+        error($name, "Error: attempting to assigning the return of a function when function does not return");
+      }
+      else {
+        $typeOf = Types.UNKNOWN;
+        $value = "<FUNCTION CALL>";
+      }
+    }
 		| v = VARIABLE_NAME {
 	      Identifier var = getVariable($v.getText());
       if(var == null) {
@@ -193,35 +226,37 @@ assignment
       }
     }
 		| e = expr {
-      System.out.println($name.getText() + " is an expr");
+      // can check if contains a decimal but doesnt check types of variables
       $typeOf = Types.DOUBLE;
       $value = $e.text;
     }
 	) {
-    if($isError) {
-      System.out.println("Error on: " + $name.getText());
-		  if($typeOf != null && $typeOf.equals("")) {
-        error($name, "invalid assignment, type not found");
-      } else if($value != null && $value.equals("")) {
-	        error($name, "invalid assignment, value not found");
-      }
-    } else {
+    if(!$isError) {
       // Get if var already exists
       Identifier newID = getVariable($name.getText());
-        if(newID != null && !$typeOf.equals(Types.UNKNOWN) && !$typeOf.equals(newID.type)){ // mismatch type to an existing variable
-          error($name, "invalid assignment, type does not match | current: " + newID.type + " new: " + $typeOf);
-        } else {
-        if(newID == null) { // if not already exists create new var
-	            newID = createVariable($name.getText(), $value, $typeOf);
-        } else { // if already exists then reassign
-	          newID.value = $value;
-            if(newID.type.equals(Types.UNKNOWN)) { // if type not known then assign it the new type
-              newID.type = $typeOf;
+	      // mismatch type to an existing variable, dont error on unknown
+      boolean doAssign = true;
+      if(newID != null) {
+        if(!$typeOf.equals(Types.UNKNOWN) && !newID.type.equals(Types.UNKNOWN)){
+            if(!(newID.type.equals(Types.DOUBLE) && $typeOf.equals(Types.INT))) // a double can be assigned an int
+            {
+            if(!$typeOf.equals(newID.type)){
+              error($name, "invalid assignment, type does not match | current: " + newID.type + " new: " + $typeOf);
+              doAssign = false;
             }
+          } 
         }
-        System.out.println("Assigning | name: " + newID.id + " | value: " + newID.value + " | scope: " + newID.scope + " | Level: " + newID.scopeLevel + " | type: " + newID.type);
+      }
+      if(doAssign){
+          if(newID == null) { // if not already exists create new var
+                newID = createVariable($name.getText(), $value, $typeOf);
+          } else { // if already exists then reassign
+              newID.value = $value;
+              newID.type = $typeOf;
+          }
+      System.out.println("Assigning | name: " + newID.id + " | value: " + newID.value + " | scope: " + newID.scope + " | Level: " + newID.scopeLevel + " | type: " + newID.type);
     }
-    }
+  }
 };
 
 array: ( '[' (type ',')*? type ']');
@@ -335,41 +370,65 @@ loopScope:
 } (statement | 'continue' | 'break')* '}' {removeScopeLevel();};
 
 functionDefinition
-	returns[boolean doesReturn]
+	returns[String name, int arity, boolean doesReturn]
 	locals[ArrayList<String> variableParamNames]:
-	'define' funcName = VARIABLE_NAME {
+	'define' n = VARIABLE_NAME {
+    $name = $n.getText();
 	    $variableParamNames = new ArrayList<String>();
   } '(' (
-		n = VARIABLE_NAME {
-	      $variableParamNames.add($n.getText());
+		VARIABLE_NAME {
+		      $variableParamNames.add($VARIABLE_NAME.getText());
     } (
-			',' n = VARIABLE_NAME {
-        $variableParamNames.add($n.getText());
+			',' VARIABLE_NAME {
+	        $variableParamNames.add($VARIABLE_NAME.getText());
       }
 		)*
 	)? ')' '{' { 
-    String f = $funcName.getText();
-    if(doesFunctionExist(f)) {
-      error($funcName, "Error: function " + $funcName.getText() + "already Exists");
+    if(doesFunctionExist($name)) {
+      error($n, "Error: function " + $name + "already Exists");
     } else {
-	  setMainScope(f);
-		    for(String name : $variableParamNames) {
-        createVariable(name, "<FUNCTION_PARAM>", Types.UNKNOWN);
-        System.out.println("Adding " + name + " to " + f + " scope");
+	  setMainScope($name);
+			    for(String varName : $variableParamNames) {
+	        createVariable(varName, "<FUNCTION_PARAM>", Types.UNKNOWN);
+	        System.out.println("Adding " + varName + " to " + $name + " scope");
       }
     }
 } (
 		statement
 		| ('return' varExprOrType | expr) {
-      System.out.println($funcName.getText() + " does return");
       $doesReturn = true;
       }
 	)* '}' {
+	    $arity = $variableParamNames.size();
+    createFunction($name, $arity, $doesReturn);
   exitMainScope();
 };
 
-functionCall:
-	VARIABLE_NAME '(' (varExprOrType (',' varExprOrType)*)? ')';
+functionCall
+	returns[String name, boolean doesReturn, boolean isSuccess]
+	locals[int arity]:
+	n = VARIABLE_NAME '(' (
+		varExprOrType {
+    $arity +=1;
+  } (
+			',' varExprOrType {
+	   $arity +=1;
+  }
+		)*
+	)? ')' {
+    $name = $n.getText();
+    if(!doesFunctionExist($name)) {
+      error($n, "Error: attempting to call a function that does not exist");
+    } else {
+      FunctionIdentifier fid = getFunction($name);
+      if(fid.arity != $arity) {
+        error($n, "attempting to call a function with incorrect number of arguments");
+      } else {
+        $doesReturn = fid.doesReturn;
+        $isSuccess = true;
+      }
+    }
+  };
 
 input: input_decimal | input_string | input_number;
 
@@ -377,12 +436,12 @@ input_string: 'input string';
 input_number: 'input number';
 input_decimal: 'input decimal';
 
-printType 
-  returns [Boolean hasKnownValue, String value]:
-  	INT {$hasKnownValue = true; $value = $INT.getText(); }
-    | DECIMAL {$hasKnownValue = true; $value = $DECIMAL.getText();}
-    | STRING {$hasKnownValue = true; $value = $STRING.getText();}
-    | VARIABLE_NAME {
+printType
+	returns[Boolean hasKnownValue, String value]:
+	INT {$hasKnownValue = true; $value = $INT.getText(); }
+	| DECIMAL {$hasKnownValue = true; $value = $DECIMAL.getText();}
+	| STRING {$hasKnownValue = true; $value = $STRING.getText();}
+	| VARIABLE_NAME {
         String id = $VARIABLE_NAME.getText();
         used.add(id);
         // If we're in the middle of first assignment to VARIABLE_NAME (self-reference):
@@ -392,8 +451,7 @@ printType
         }
         $hasKnownValue = false;
       }
-    | expr {$hasKnownValue = true; $value = String.valueOf($expr.value);}
-  ;
+	| expr {$hasKnownValue = true; $value = String.valueOf($expr.value);};
 
 //output: 'print' varExprOrType;
 output:
@@ -405,7 +463,6 @@ output:
         System.out.println("DEBUG: Line " +  ": Can't print this value. Need to evaluate further.");
       }
   };
-
 
 varExprOrType: expr | VARIABLE_NAME type;
 type: INT | STRING | DECIMAL | BOOL;

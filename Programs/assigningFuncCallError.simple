@@ -1,0 +1,12 @@
+define callReturn(x,y) {
+    return x
+}
+
+x=callReturn(2,4)
+
+define callNoReturn() {
+    x=3.3
+    x=x plus 22
+}
+
+x=callNoReturn()
