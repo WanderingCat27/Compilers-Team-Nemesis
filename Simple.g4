@@ -215,7 +215,7 @@ assignment
 		| v = VARIABLE_NAME {
 	      Identifier var = getVariable($v.getText());
       if(var == null) {
-          error($v, "Error attempting to assign a variable that is not defined");
+          error($v, "Error variable " + $v.getText() + " does not exist");
           $isError = true;
       } else if (var.scope != "global" && var.scope != getScope()){
           error($v, "Error attempting to assign a variable that is not defined (there is a variable defined that is out of scope)");
