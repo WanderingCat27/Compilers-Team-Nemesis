@@ -60,6 +60,10 @@ grammar Simple;
     return currScope;
   }
 
+  boolean doesFunctionExist(String functionName) {
+	    return scopedSymbolTable.get(getScope()) == null;
+  }
+
   int getScopeLevel() {
 		    ArrayList<SymbolTable> tables = scopedSymbolTable.get(getScope());
       if(tables.size() == 0) {
@@ -342,11 +346,16 @@ functionDefinition
       }
 		)*
 	)? ')' '{' { 
-	  setMainScope($funcName.getText());
+    if(doesFunctionExist()) {
+      error($funcName, "Error: function " + $funcName.getText() + "already Exists")
+    } else {
+		  f = $funcName.getText();
+	  setMainScope(f);
 		    for(String name : $variableParamNames) {
         createVariable(name, "<FUNCTION_PARAM>", Types.UNKNOWN);
-        System.out.println("Adding " + name + " to " + $funcName.getText() + " scope");
+        System.out.println("Adding " + name + " to " + f + " scope");
       }
+    }
 } (statement* | ('return' varExprOrType)*) '}' {
   exitMainScope();
 };
