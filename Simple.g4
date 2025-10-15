@@ -181,7 +181,7 @@ assignment
     }
 		| v = VARIABLE_NAME {
 	      Identifier var = getVariable($v.getText());
-         if(var == null) {
+      if(var == null) {
           error($v, "Error attempting to assign a variable that is not defined");
           $isError = true;
       } else if (var.scope != "global" && var.scope != getScope()){
@@ -193,15 +193,16 @@ assignment
       }
     }
 		| e = expr {
+      System.out.println($name.getText() + " is an expr");
       $typeOf = Types.DOUBLE;
-	      $value = $e.text;
+      $value = $e.text;
     }
 	) {
     if($isError) {
       System.out.println("Error on: " + $name.getText());
-	    if($typeOf.equals("")) {
-      error($name, "invalid assignment, type not found");
-	      } else if($value.equals("")) {
+		  if($typeOf != null && $typeOf.equals("")) {
+        error($name, "invalid assignment, type not found");
+      } else if($value != null && $value.equals("")) {
 	        error($name, "invalid assignment, value not found");
       }
     } else {
@@ -346,10 +347,10 @@ functionDefinition
       }
 		)*
 	)? ')' '{' { 
-    if(doesFunctionExist()) {
-      error($funcName, "Error: function " + $funcName.getText() + "already Exists")
+    String f = $funcName.getText();
+    if(doesFunctionExist(f)) {
+      error($funcName, "Error: function " + $funcName.getText() + "already Exists");
     } else {
-		  f = $funcName.getText();
 	  setMainScope(f);
 		    for(String name : $variableParamNames) {
         createVariable(name, "<FUNCTION_PARAM>", Types.UNKNOWN);
