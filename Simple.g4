@@ -380,6 +380,7 @@ output:
     // TODO add code for STRING VARIABLES etc
   };
 
+
 varExprOrType: expr | VARIABLE_NAME type;
 type: INT | STRING | DECIMAL | BOOL;
 
