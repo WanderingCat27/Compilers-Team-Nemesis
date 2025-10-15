@@ -22,8 +22,29 @@ grammar Simple;
   }
 
 
+  class FunctionIdentifier {
+    String name;
+    ArrayList<String> paramNames;
+    boolean doesReturn;
+  }
 
+	  Map<String, FunctionIdentifier> functionTable = new HashMap();
+  
+  FunctionIdentifier getFunction(String name) {
+	    return functionTable.get(name);
+  }
+	boolean doesFunctionExist(String functionName) {
+	    return getFunction(functionName) != null;
+  }
 
+	  FunctionIdentifier createFunction(String functionName, ArrayList<String> paramNames, boolean doesReturn) {
+      FunctionIdentifier fid = new FunctionIdentifier();
+      fid.name = functionName;
+      fid.paramNames = paramNames;
+      fid.doesReturn = doesReturn;
+      functionTable.put(functionName, fid);
+      return fid;
+  }
 // matches the name of a variable to the identifier
   class SymbolTable extends HashMap<String, Identifier> {
   }
@@ -60,9 +81,7 @@ grammar Simple;
     return currScope;
   }
 
-  boolean doesFunctionExist(String functionName) {
-	    return scopedSymbolTable.get(getScope()) == null;
-  }
+
 
   int getScopeLevel() {
 		    ArrayList<SymbolTable> tables = scopedSymbolTable.get(getScope());
@@ -192,19 +211,22 @@ assignment
         $typeOf = var.type;
       }
     }
-		| f = functionCall {
-      funcName = $f.getText();
-      if(!doesFunctionExist(funcName)) {
-        $isError = true;
-        error($f, "Error attempting to call function that does not exist);
-      } else if($f.doesReturn) {
-	        error($f, "Error attempting to assign a function call that does not return a value");
-      }
-    }
 		| e = expr {
       System.out.println($name.getText() + " is an expr");
       $typeOf = Types.DOUBLE;
       $value = $e.text;
+    }
+		| f = functionCall {
+      if(!doesFunctionExist($f.name)) {
+        $isError = true;
+        System.out.println("not exist");
+      } else if(!$f.doesReturn){
+	        System.out.println("no return");
+        error($name, "Eror: Attempting to assign a function call where the function does not return a value");
+      } else {
+      $typeOf = Types.UNKNOWN;
+      $value = "<FUNCTION CALL>";
+      }
     }
 	) {
     if($isError) {
@@ -344,9 +366,9 @@ loopScope:
 } (statement | 'continue' | 'break')* '}' {removeScopeLevel();};
 
 functionDefinition
-	returns[boolean doesReturn]
-	locals[ArrayList<String> variableParamNames]:
-	'define' funcName = VARIABLE_NAME {
+	returns[String name, boolean doesReturn, ArrayList<String> variableParamNames]:
+	'define' f = VARIABLE_NAME {
+      $name = $f.getText();
 	    $variableParamNames = new ArrayList<String>();
   } '(' (
 		n = VARIABLE_NAME {
@@ -357,28 +379,39 @@ functionDefinition
       }
 		)*
 	)? ')' '{' { 
-    String f = $funcName.getText();
-    if(doesFunctionExist(f)) {
-      error($funcName, "Error: function " + $funcName.getText() + "already Exists");
+
+    if(doesFunctionExist($name)) {
+      error($f, "Error: function " + $name + "already Exists");
     } else {
-	  setMainScope(f);
-		    for(String name : $variableParamNames) {
-        createVariable(name, "<FUNCTION_PARAM>", Types.UNKNOWN);
-        System.out.println("Adding " + name + " to " + f + " scope");
+		    setMainScope($name);
+		    for(String varName : $variableParamNames) {
+	        createVariable(varName, "<FUNCTION_PARAM>", Types.UNKNOWN);
+          System.out.println("Adding " + varName + " to " + $name + " scope");
       }
     }
 } (
 		statement
 		| ('return' varExprOrType | expr) {
-      System.out.println($funcName.getText() + " does return");
       $doesReturn = true;
       }
 	)* '}' {
-  exitMainScope();
+		    FunctionIdentifier fid  = createFunction($name, $variableParamNames, $doesReturn);
+        System.out.println("Created function " + $name + " that does" + ($doesReturn ? " " : " not ") + "return");
+      exitMainScope();
 };
 
-functionCall:
-	VARIABLE_NAME '(' (varExprOrType (',' varExprOrType)*)? ')';
+functionCall
+	returns[String name, boolean doesReturn]:
+	n = VARIABLE_NAME {
+    $name = $n.getText();
+    
+  } '(' (varExprOrType (',' varExprOrType)*)? ')' {
+    if(doesFunctionExist($name)){
+        error($n, "Error: attempting to call a function that does not exist");
+	    }else {
+        $doesReturn = getFunction($name).doesReturn;
+    }
+  };
 
 input: input_decimal | input_string | input_number;
 
@@ -409,4 +442,4 @@ VARIABLE_NAME: ([a-z] | [A-Z] | '_')+;
 COMMENT_LINE: '*' ~[\n\r]* -> skip;
 // skip comments
 WHITESPACE: [ \r\n\t]+ -> skip;
-// skip extra white space ~[\n\r]* -> skip;
+// skip extra white space ~[\n\r]* -> skip
