@@ -192,6 +192,15 @@ assignment
         $typeOf = var.type;
       }
     }
+		| f = functionCall {
+      funcName = $f.getText();
+      if(!doesFunctionExist(funcName)) {
+        $isError = true;
+        error($f, "Error attempting to call function that does not exist);
+      } else if($f.doesReturn) {
+	        error($f, "Error attempting to assign a function call that does not return a value");
+      }
+    }
 		| e = expr {
       System.out.println($name.getText() + " is an expr");
       $typeOf = Types.DOUBLE;
