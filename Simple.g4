@@ -370,16 +370,33 @@ input_string: 'input string';
 input_number: 'input number';
 input_decimal: 'input decimal';
 
+printType 
+  returns [Boolean hasKnownValue, String value]:
+  	INT {$hasKnownValue = true; $value = $INT.getText(); }
+    | DECIMAL {$hasKnownValue = true; $value = $DECIMAL.getText();}
+    | STRING {$hasKnownValue = true; $value = $STRING.getText();}
+    | VARIABLE_NAME {
+        String id = $VARIABLE_NAME.getText();
+        used.add(id);
+        // If we're in the middle of first assignment to VARIABLE_NAME (self-reference):
+        if (!doesVariableExist(id)) {
+          // General use-before-assign.
+          error($VARIABLE_NAME, "use of variable '" + id + "' before assignment");
+        }
+        $hasKnownValue = false;
+      }
+    | expr {$hasKnownValue = true; $value = String.valueOf($expr.value);}
+  ;
+
 //output: 'print' varExprOrType;
 output:
-	'print' expr {
-  if ($expr.hasKnownValue) {
+	'print' printType {
+  if ($printType.hasKnownValue) {
         // Let us print it out (for debugging purposes really)
-        System.out.println("DEBUG: Line " +  ": Printing known value: " + $expr.value);
+        System.out.println("DEBUG: Line " +  ": Printing known value: " + $printType.value);
       } else {
         System.out.println("DEBUG: Line " +  ": Can't print this value. Need to evaluate further.");
       }
-    // TODO add code for STRING VARIABLES etc
   };
 
 

@@ -1,6 +1,6 @@
 y = 4.5
 r = 10
 print 1.3 divide 4
-print 5 plus 4
+print "hi"
 a = "Alex"
 a = 3
