@@ -335,6 +335,7 @@ loopScope:
 } (statement | 'continue' | 'break')* '}' {removeScopeLevel();};
 
 functionDefinition
+	returns[boolean doesReturn]
 	locals[ArrayList<String> variableParamNames]:
 	'define' funcName = VARIABLE_NAME {
 	    $variableParamNames = new ArrayList<String>();
@@ -357,7 +358,13 @@ functionDefinition
         System.out.println("Adding " + name + " to " + f + " scope");
       }
     }
-} (statement | ('return' varExprOrType | expr))* '}' {
+} (
+		statement
+		| ('return' varExprOrType | expr) {
+      System.out.println($funcName.getText() + " does return");
+      $doesReturn = true;
+      }
+	)* '}' {
   exitMainScope();
 };
 
