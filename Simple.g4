@@ -7,6 +7,7 @@ grammar Simple;
     static String STRING = "string";
     static String INT = "int";
     static String DOUBLE = "double";
+    static String UNKNOWN = "unknown";
   }
 
   /** Identifier type */
@@ -20,7 +21,7 @@ grammar Simple;
     int scopeLevel;
   }
 
-  String pendingFunctionID = "";
+
 
 
 // matches the name of a variable to the identifier
@@ -174,10 +175,6 @@ assignment
       $typeOf = Types.STRING;
 	    $value = $t.getText();
     }
-		| e = expr {
-      $typeOf = Types.DOUBLE;
-	      $value = $e.text;
-    }
 		| v = VARIABLE_NAME {
 	      Identifier var = getVariable($v.getText());
          if(var == null) {
@@ -191,6 +188,10 @@ assignment
         $typeOf = var.type;
       }
     }
+		| e = expr {
+      $typeOf = Types.DOUBLE;
+	      $value = $e.text;
+    }
 	) {
     if($isError) {
       System.out.println("Error on: " + $name.getText());
@@ -202,14 +203,16 @@ assignment
     } else {
       // Get if var already exists
       Identifier newID = getVariable($name.getText());
-        if(newID != null && !$typeOf.equals(newID.type)){ // mismatch type to an existing variable
-          error($name, "invalid assignment, type does not match");
+        if(newID != null && !$typeOf.equals(Types.UNKNOWN) && !$typeOf.equals(newID.type)){ // mismatch type to an existing variable
+          error($name, "invalid assignment, type does not match | current: " + newID.type + " new: " + $typeOf);
         } else {
         if(newID == null) { // if not already exists create new var
 	            newID = createVariable($name.getText(), $value, $typeOf);
         } else { // if already exists then reassign
 	          newID.value = $value;
-          newID.type = $typeOf;
+            if(newID.type.equals(Types.UNKNOWN)) { // if type not known then assign it the new type
+              newID.type = $typeOf;
+            }
         }
         System.out.println("Assigning | name: " + newID.id + " | value: " + newID.value + " | scope: " + newID.scope + " | Level: " + newID.scopeLevel + " | type: " + newID.type);
     }
@@ -325,25 +328,28 @@ loopScope:
 	'{' {
 	  addScopeLevel();
 } (statement | 'continue' | 'break')* '}' {removeScopeLevel();};
-functionScope:
-	'{' { 
-	  setMainScope(pendingFunctionID);
-    pendingFunctionID = "";
+
+functionDefinition
+	locals[ArrayList<String> variableParamNames]:
+	'define' funcName = VARIABLE_NAME {
+	    $variableParamNames = new ArrayList<String>();
+  } '(' (
+		n = VARIABLE_NAME {
+	      $variableParamNames.add($n.getText());
+    } (
+			',' n = VARIABLE_NAME {
+        $variableParamNames.add($n.getText());
+      }
+		)*
+	)? ')' '{' { 
+	  setMainScope($funcName.getText());
+		    for(String name : $variableParamNames) {
+        createVariable(name, "<FUNCTION_PARAM>", Types.UNKNOWN);
+        System.out.println("Adding " + name + " to " + $funcName.getText() + " scope");
+      }
 } (statement* | ('return' varExprOrType)*) '}' {
   exitMainScope();
 };
-
-functionDefinition:
-	'define' VARIABLE_NAME {
-    if(!isScopeGlobal()) {
-      error($VARIABLE_NAME, "Functions must be defined in global scope, function cannot be defined within functions");
-    } else {
-	    if(pendingFunctionID != "") {
-        System.err.println("function name already pending"); // TODO ? is this necessary
-      }
-	    pendingFunctionID = $VARIABLE_NAME.getText();
-    }
-   } '(' (varExprOrType ( ',' varExprOrType)*)? ')' functionScope;
 
 functionCall:
 	VARIABLE_NAME '(' (varExprOrType (',' varExprOrType)*)? ')';
