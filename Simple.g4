@@ -357,7 +357,7 @@ functionDefinition
         System.out.println("Adding " + name + " to " + f + " scope");
       }
     }
-} (statement* | ('return' varExprOrType)*) '}' {
+} (statement | ('return' varExprOrType | expr))* '}' {
   exitMainScope();
 };
 
