@@ -1,0 +1,17 @@
+a = "a"
+
+b=1
+
+c=4
+
+define f() {
+    c=7
+    a="not a"
+    is 3 equal to 3 {
+        c=3
+        in_if="in if (level 2)" 
+    }
+    in_if=1
+}
+
+b=c
