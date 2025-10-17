@@ -1,0 +1,9 @@
+define functionOne(x,y) {
+    x = 3
+    *Can't define a function in a function
+    define functionTwo(z) {
+      z = 3
+      return z  
+    }
+    y = functionTwo(2)
+}

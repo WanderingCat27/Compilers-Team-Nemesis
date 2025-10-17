@@ -1,5 +1,6 @@
-define a() {
-    define b() {
-        
+define a(x,y) {
+    x=3
+    define b(z) {
+        z=2
     }
 }

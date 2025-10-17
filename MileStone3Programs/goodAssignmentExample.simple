@@ -1,0 +1,8 @@
+define returnFive() {
+    return 5
+}
+*Variables can be an expresion, number, string, or function call
+varOne = 5 plus (3 minus (8 divide 4.5))
+varTwo = 40
+varThree = "Hello World"
+varFour = returnFive()

@@ -228,7 +228,7 @@ assignment
 		| e = expr {
       // can check if contains a decimal but doesnt check types of variables
       $typeOf = Types.DOUBLE;
-      $value = $e.text;
+      $value = String.valueOf($e.value);
     }
 	) {
     if(!$isError) {
@@ -395,6 +395,9 @@ functionDefinition
     }
 } (
 		statement
+    | ('define') {
+      error($n, "Error can't define function in a function");
+    }
 		| ('return' varExprOrType | expr) {
       $doesReturn = true;
       }

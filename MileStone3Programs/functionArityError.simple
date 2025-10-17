@@ -1,0 +1,6 @@
+*There is nothing wrong with the function
+define badFunctionCall(x,y,z) { 
+    return x
+}
+*Since the function call doesn't have the right number of aguments it throws an error
+badCall = badFunctionCall() 

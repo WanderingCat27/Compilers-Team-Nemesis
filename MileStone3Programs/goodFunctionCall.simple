@@ -1,0 +1,6 @@
+define goodFunctionCall(x,y) {
+    z= x plus y
+    return z
+}
+*Since the number of arguments is correct and the function has a return statement the function call is correct
+goodCall = goodFunctionCall(2,3)

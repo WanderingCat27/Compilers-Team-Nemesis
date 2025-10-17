@@ -1,0 +1,5 @@
+define printTwoPlusTwo(){
+    print 2 plus 2
+}
+*Prints out 2 + 2
+printTwoPlusTwo()
