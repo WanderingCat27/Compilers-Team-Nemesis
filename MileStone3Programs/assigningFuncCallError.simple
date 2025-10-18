@@ -8,5 +8,5 @@ define callNoReturn() {
     x=3.3
     x=x plus 22
 }
-*The function call is correct, but since there is no return statement in the function an error is thrown
+*The function call is correct, but since there is no return statement in the function an error is thrown 
 x=callNoReturn()
