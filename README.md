@@ -14,3 +14,8 @@
   calling is the same as in java
   arrays = [decimal, int, or strings]
   print = print(string, decimal, int, word)
+
+# INSTRUCTIONS FOR MILESTONE 3#
+1. the 3 good/bad semantic problems are in the 'Milestone3Programs' Folder. The onces that have an 'error' in them are the bad ones, and the ones with 'good' in them are the good ones.
+2. Run them. (Ex: antlr4-grun Simple prog -tree .\Milestone3Programs\FunctionInFunctionError.simple)
+3. Read terminal to see scoping/error detection.
