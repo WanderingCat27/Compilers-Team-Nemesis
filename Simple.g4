@@ -24,14 +24,30 @@ grammar Simple;
   class FunctionIdentifier {
     String name;
     int arity;
+    ArrayList<Identifier> Params;
     boolean doesReturn;
+    ArrayList<String> code = new ArrayList<String>();
+
+    void addLine(String line) {
+      code.add(line);
+    }
   }
 
+  void addCodeLine(String line) {
+    if(isScopeGlobal()) {
+	      globalCodeLines.add(line);
+    } else {
+	      functionTable.get(getScope()).addLine(line);
+    }
+  }
+
+  ArrayList<String> globalCodeLines = new ArrayList<String>();
   Map<String, FunctionIdentifier> functionTable = new HashMap();
 
   FunctionIdentifier getFunction(String name) {
     return functionTable.get(name);
   }
+
 
   FunctionIdentifier createFunction(String name, int arity, boolean doesReturn) {
     FunctionIdentifier fid = new FunctionIdentifier();
@@ -179,10 +195,14 @@ grammar Simple;
       }
       System.out.println();
   }
+
 }
 prog:
 	(statement | functionDefinition)* {
 	     printDiagnostics();
+       for(String line : globalCodeLines) {
+          System.out.println(line);
+       }
 	  };
 
 assignment
@@ -437,10 +457,17 @@ input_number: 'input number';
 input_decimal: 'input decimal';
 
 printType
-	returns[Boolean hasKnownValue, String value]:
-	INT {$hasKnownValue = true; $value = $INT.getText(); }
-	| DECIMAL {$hasKnownValue = true; $value = $DECIMAL.getText();}
-	| STRING {$hasKnownValue = true; $value = $STRING.getText();}
+	returns[Boolean hasKnownValue, String value, String code]:
+	INT {
+    $hasKnownValue = true; $value = $INT.getText(); 
+	  $code = "System.out.println($value)";
+  }
+	| DECIMAL {$hasKnownValue = true; $value = $DECIMAL.getText();
+		  $code = "System.out.println($value)";
+  }
+	| STRING {$hasKnownValue = true; $value = $STRING.getText();
+		  $code = "System.out.println("+$value+");";
+    }
 	| VARIABLE_NAME {
         String id = $VARIABLE_NAME.getText();
         used.add(id);
@@ -448,10 +475,13 @@ printType
         if (!doesVariableExist(id)) {
           // General use-before-assign.
           error($VARIABLE_NAME, "use of variable '" + id + "' before assignment");
+        } else{
+		          $code = "System.out.println(" + id + ");";
         }
         $hasKnownValue = false;
       }
-	| expr {$hasKnownValue = true; $value = String.valueOf($expr.value);};
+	| expr {$hasKnownValue = true; $value = String.valueOf($expr.value); $code = "System.out.println("+String.valueOf($expr.value)+");";
+		};
 
 //output: 'print' varExprOrType;
 output:
@@ -462,6 +492,8 @@ output:
       } else {
         System.out.println("DEBUG: Line " +  ": Can't print this value. Need to evaluate further.");
       }
+
+		  addCodeLine($printType.code);
   };
 
 varExprOrType: expr | VARIABLE_NAME type;
