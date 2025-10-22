@@ -279,7 +279,10 @@ assignment
   }
 };
 
-array: ( '[' (type ',')*? type ']');
+array:
+  ( '[' (INT ',')*? INT ']')
+  ( '[' DECIMAL ','*? DECIMAL ']')
+  ( '[' STRING ','*? STRING ']');
 
 statement:
 	for_statement
