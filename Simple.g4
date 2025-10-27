@@ -281,8 +281,8 @@ assignment
 
 array:
   ( '[' (INT ',')*? INT ']')
-  ( '[' DECIMAL ','*? DECIMAL ']')
-  ( '[' STRING ','*? STRING ']');
+  | ( '[' DECIMAL ','*? DECIMAL ']')
+  | ( '[' STRING ','*? STRING ']');
 
 statement:
 	for_statement
