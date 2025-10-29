@@ -1,0 +1,11 @@
+print 5
+
+x = 5
+
+input number x
+
+print x
+
+x = "thing"
+
+print x
