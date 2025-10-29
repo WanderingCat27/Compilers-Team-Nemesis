@@ -3,6 +3,8 @@ grammar Simple;
 @header { import java.util.*; import java.io.*;}
 
 @members {
+  boolean isDebug = true;
+
   class Types {
     static String STRING = "string";
     static String INT = "int";
@@ -55,7 +57,8 @@ grammar Simple;
     fid.arity = arity;
     fid.doesReturn = doesReturn;
     functionTable.put(name, fid);
-    System.out.println("Created func: name: " + name + " | arity: " + arity + " | doesReturn: " + doesReturn);
+    if(isDebug)
+      System.out.println("Created func: name: " + name + " | arity: " + arity + " | doesReturn: " + doesReturn);
     return fid;
   }
 
@@ -183,19 +186,24 @@ grammar Simple;
   /** Collected diagnostics we’ll print at the end. */
   List<String> diagnostics = new ArrayList<>();
 
+
   /** Helper to record an error with source coordinates. */
   void error(Token t, String msg) {
     diagnostics.add("line " + t.getLine() + ":" + t.getCharPositionInLine() + " " + msg);
   }
 
   int printDiagnostics() {
+    boolean printOnce=true;
       int numErrors = 0;
       // After parsing the whole file: report unused variables and print errors.
       for (String d : diagnostics) {
+        if(isDebug && printOnce) {
+          System.out.println("\n––––––– Errors –––––––\n");
+          printOnce=false;
+        }
         System.err.println("error: " + d);
         numErrors++;
       }
-      System.out.println();
       return numErrors;
   }
   //Code generation
@@ -214,7 +222,7 @@ grammar Simple;
   void writeFile() {
     try (PrintWriter pw = new PrintWriter("SimpleProgram.java", "UTF-8")) {
       for(String line : globalCodeLines) {
-          sb.append(line);
+          sb.append(line + "\n");
       } 
       pw.print(sb.toString());
       pw.print("}\n}\n");
@@ -224,15 +232,20 @@ grammar Simple;
 
   }
 }
-prog
-: {openProgram();}
- (statement | functionDefinition)* {
-	    // TODO add import java.util.Scanner; and  to top of file
+prog:
+	{
+    openProgram();
+    // True : print debug messages like variable assigning and function creation/calls
+    // False : Don't. Just prints the errors and whether it compiled successfully or not
+    isDebug = false;
+    } (statement | functionDefinition)* {
 	     int numErrors = printDiagnostics();
        if(numErrors == 0) {
+        if(isDebug) System.out.println("\n––");
+        System.out.println("Compile Successful");
         writeFile();
        } else {
-        
+        System.err.println("There are errors in the program, cannot compile");
         System.exit(1);
        }
 	  };
@@ -240,20 +253,21 @@ prog
 assignment
 	locals[String value, String typeOf, boolean isError]:
 	name = VARIABLE_NAME '=' (
-		e = expr {
-      System.out.println("expression");
-      // can check if contains a decimal but doesnt check types of variables
-      $typeOf = $e.typeOf;
-      // $value = String.valueOf($e.value);
-      $value=$e.exprString;
-    }
-		| t = DECIMAL {
+		t = DECIMAL {
       $typeOf = Types.DOUBLE;
 	    $value = $t.getText();
     }
 		| t = INT {
       $typeOf = Types.INT;
 	    $value = $t.getText();
+    }
+		| e = expr {
+	    if(isDebug)
+        System.out.println("expression: " + $e.exprString);
+      // can check if contains a decimal but doesnt check types of variables
+      $typeOf = $e.typeOf;
+      // $value = String.valueOf($e.value);
+      $value=$e.exprString;
     }
 		| t = STRING {
       $typeOf = Types.STRING;
@@ -321,7 +335,8 @@ assignment
               addCodeLine(newID.id + "=" + $value + ";");
 
           }
-      System.out.println("Assigning | name: " + newID.id + " | value: " + newID.value + " | scope: " + newID.scope + " | Level: " + newID.scopeLevel + " | type: " + newID.type);
+      if(isDebug)
+        System.out.println("Assigning | name: " + newID.id + " | value: " + newID.value + " | scope: " + newID.scope + " | Level: " + newID.scopeLevel + " | type: " + newID.type);
     }
   }
 };
@@ -359,18 +374,15 @@ expr
       if($b.isDouble) {
         $typeOf = Types.DOUBLE;
       }
-      if ($hasKnownValue && $b.hasKnownValue) {
         if ($op.getText().equals("plus")) {
 		      $exprString += " + " + $b.exprString;
-          System.out.println($exprString);
-          $value = $value + $b.value;
+          if ($hasKnownValue && $b.hasKnownValue)
+            $value = $value + $b.value;
         } else {
 	        $exprString += " - " + $b.value;
-          $value = $value - $b.value;
+          if ($hasKnownValue && $b.hasKnownValue)
+            $value = $value - $b.value;
         }
-      } else {
-        $hasKnownValue = false;
-      }
     }
 	)*;
 
@@ -502,7 +514,8 @@ functionDefinition
 	  setMainScope($name);
 			    for(String varName : $variableParamNames) {
 	        createVariable(varName, "<FUNCTION_PARAM>", Types.UNKNOWN);
-	        System.out.println("Adding " + varName + " to " + $name + " scope");
+          if(isDebug)
+	          System.out.println("Adding " + varName + " to " + $name + " scope");
       }
     }
 } (
@@ -566,7 +579,7 @@ input_decimal:
 printType
 	returns[Boolean hasKnownValue, String value, String code]:
 	INT {
-    $hasKnownValue = true; $value = $INT.getText(); 
+    $hasKnownValue = true; $value = $INT.getText();
 	  $code = "System.out.println(" + $value + ");";
   }
 	| DECIMAL {$hasKnownValue = true; $value = $DECIMAL.getText();
@@ -587,19 +600,15 @@ printType
         }
         $hasKnownValue = false;
       }
-	| expr {$hasKnownValue = true; $value = String.valueOf($expr.value); $code = "System.out.println("+String.valueOf($expr.value)+");";
+	| expr {
+          $hasKnownValue = true; 
+          $value = String.valueOf($expr.value); 
+          $code = "System.out.println("+String.valueOf($expr.value)+");";
 		};
 
 //output: 'print' varExprOrType;
 output:
 	'print' printType {
-  if ($printType.hasKnownValue) {
-        // Let us print it out (for debugging purposes really)
-        System.out.println("DEBUG: Line " +  ": Printing known value: " + $printType.value);
-      } else {
-        System.out.println("DEBUG: Line " +  ": Can't print this value. Need to evaluate further.");
-      }
-
 		  addCodeLine($printType.code);
   };
 

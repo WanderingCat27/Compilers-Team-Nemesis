@@ -1,11 +1,11 @@
-print 5
-
 x = 5
+
+print x
 
 input number x
 
 print x
 
-x = "thing"
+x = 7
 
 print x
