@@ -212,7 +212,14 @@ prog:
 assignment
 	locals[String value, String typeOf, boolean isError]:
 	name = VARIABLE_NAME '=' (
-		t = DECIMAL {
+		e = expr {
+      System.out.println("expression");
+      // can check if contains a decimal but doesnt check types of variables
+      $typeOf = $e.typeOf;
+      // $value = String.valueOf($e.value);
+      $value=$e.exprString;
+    }
+		| t = DECIMAL {
       $typeOf = Types.DOUBLE;
 	    $value = $t.getText();
     }
@@ -248,11 +255,6 @@ assignment
 	        $value = var.value;    
         $typeOf = var.type;
       }
-    }
-		| e = expr {
-      // can check if contains a decimal but doesnt check types of variables
-      $typeOf = Types.DOUBLE;
-      $value = String.valueOf($e.value);
     }
 	) {
     if(!$isError) {
@@ -314,8 +316,10 @@ statement:
 	| output;
 
 expr
-	returns[boolean hasKnownValue, float value]:
+	returns[boolean hasKnownValue, float value, String exprString, String typeOf]:
 	a = word {
+      $exprString = $a.exprString;
+      $typeOf = $a.isDouble ? Types.DOUBLE : Types.INT;
       if ($a.hasKnownValue) {
         $hasKnownValue = true;
         $value = $a.value;
@@ -324,10 +328,16 @@ expr
       } 
     } (
 		op = ('plus' | 'minus') b = word {
+      if($b.isDouble) {
+        $typeOf = Types.DOUBLE;
+      }
       if ($hasKnownValue && $b.hasKnownValue) {
         if ($op.getText().equals("plus")) {
+		      $exprString += " + " + $b.exprString;
+          System.out.println($exprString);
           $value = $value + $b.value;
         } else {
+	        $exprString += " - " + $b.value;
           $value = $value - $b.value;
         }
       } else {
@@ -337,14 +347,28 @@ expr
 	)*;
 
 word
-	returns[boolean hasKnownValue, float value]:
+	returns[boolean hasKnownValue, float value, String exprString, boolean isDouble]:
 	a = factor {
+      $exprString = $a.factorString;
+      $isDouble = $a.isDouble;
       if ($a.hasKnownValue) {
         $hasKnownValue = true;
         $value = $a.value;
       } else $hasKnownValue = false;
     } (
 		op = ('multiply' | 'divide' | 'mod') b = factor {
+        if($op.getText().equals("divide")) {
+              $exprString += " / " + $b.factorString;
+	        } else if($op.getText().equals("multiply")) {
+              $exprString += " * " + $b.factorString;
+	        } else if($op.getText().equals("mod")) {
+              $exprString +=" % " + $b.factorString;
+        } 
+        if($b.isDouble) {          
+	          $isDouble = true;
+        }
+
+
         if ($b.hasKnownValue && $op.getText().equals("divide") && $b.value == 0) {
           $hasKnownValue = false;
         } else if ($hasKnownValue && $b.hasKnownValue) {
@@ -360,20 +384,39 @@ word
 	)*;
 
 factor
-	returns[boolean hasKnownValue, float value]:
-	INT { $hasKnownValue = true; $value = Integer.parseInt($INT.getText()); }
-	| DECIMAL {$hasKnownValue = true; $value = Float.parseFloat($DECIMAL.getText());}
+	returns[boolean hasKnownValue, float value, String factorString, boolean isDouble]:
+	INT {
+      $hasKnownValue = true; 
+      $value = Integer.parseInt($INT.getText()); 
+		  $factorString = ""+$INT.getText();
+    }
+	| DECIMAL {
+	  $isDouble = true;
+    $hasKnownValue = true; 
+    $value = Float.parseFloat($DECIMAL.getText());
+		    $factorString = ""+$DECIMAL.getText();
+    }
 	| VARIABLE_NAME {
         String id = $VARIABLE_NAME.getText();
+	      $factorString=id;
         used.add(id);
         // If we're in the middle of first assignment to VARIABLE_NAME (self-reference):
         if (!doesVariableExist(id)) {
           // General use-before-assign.
           error($VARIABLE_NAME, "use of variable '" + id + "' before assignment");
+        } else {
+          String t = getVariable(id).type;
+          if(t.equals(Types.DOUBLE)) {
+            $isDouble = true;
+	          } else if(!t.equals(Types.INT)) {
+	            error($VARIABLE_NAME, id + " is not an int or double");
+          }
         }
         $hasKnownValue = false;
       }
 	| '(' expr ')' { 
+		    $factorString = '('+ $expr.exprString +')';
+        $isDouble = $expr.typeOf.equals(Types.DOUBLE);
         if ($expr.hasKnownValue) {
           $hasKnownValue = true;
           $value = $expr.value;
