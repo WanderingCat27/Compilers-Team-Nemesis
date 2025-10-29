@@ -3,3 +3,6 @@ print "test"
 x=4
 
 print x
+
+input number x
+

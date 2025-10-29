@@ -198,8 +198,11 @@ grammar Simple;
 
 }
 prog:
-	(statement | functionDefinition)* {
-	    // TODO add import java.util.Scanner; and Scanner in = new Scanner(System.in); to top of file
+	{
+	  addCodeLine("java.util.Scanner;");
+    addCodeLine("Scanner in = new Scanner(System.in);");
+} (statement | functionDefinition)* {
+	    // TODO add import java.util.Scanner; and  to top of file
 	     printDiagnostics();
        for(String line : globalCodeLines) {
           System.out.println(line);
@@ -288,6 +291,7 @@ array:
 statement:
 	for_statement
 	| while_statement
+	| input
 	| expr
 	| if_else
 	| assignment
@@ -462,16 +466,17 @@ input: input_decimal | input_string | input_number;
 // TODO need to import java.util.Scanner; in all files we compile Scanner in = new Scanner(System.in);
 
 input_string:
-	'input string' {
-    // int num = in.nextInt();
+	'input string ' a = VARIABLE_NAME {
+		addCodeLine($a.getText()+"=in.nextInt();");
 };
 input_number:
-	'input number' {
-    // int num = in.nextLine();
+	'input number ' a = VARIABLE_NAME {
+	    addCodeLine($a.getText()+"=in.nextLine();");
 };
 input_decimal:
-	'input decimal' {
-    // int num = in.nextFloat();
+	'input decimal ' a = VARIABLE_NAME {
+	    addCodeLine($a.getText()+"=in.nextFloat();");
+
 };
 
 printType
