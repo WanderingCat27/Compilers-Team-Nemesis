@@ -216,7 +216,7 @@ grammar Simple;
       for(String line : globalCodeLines) {
           sb.append(line);
       } 
-      pw.print(sb.toString());
+      pw.print(sb.toString() + "\n");
       pw.print("}\n}\n");
     } catch (Exception e) {
       System.err.println("error: failed to write SimpleProgram.java: " + e.getMessage());
@@ -224,9 +224,8 @@ grammar Simple;
 
   }
 }
-prog
-: {openProgram();}
- (statement | functionDefinition)* {
+prog:
+	{openProgram();} (statement | functionDefinition)* {
 	    // TODO add import java.util.Scanner; and  to top of file
 	     int numErrors = printDiagnostics();
        if(numErrors == 0) {
