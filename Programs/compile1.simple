@@ -4,6 +4,7 @@ x=4.3
 x=3
 print x
 exp=(3 plus 3) multiply 44 divide x
+print exp
 
 print "input any number"
 input number x

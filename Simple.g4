@@ -240,7 +240,7 @@ assignment
 	locals[String value, String typeOf, boolean isError]:
 	name = VARIABLE_NAME '=' (
 		e = expr {
-      System.out.println("expression");
+      System.out.println("expression: " + $e.exprString);
       // can check if contains a decimal but doesnt check types of variables
       $typeOf = $e.typeOf;
       // $value = String.valueOf($e.value);
@@ -358,18 +358,16 @@ expr
       if($b.isDouble) {
         $typeOf = Types.DOUBLE;
       }
-      if ($hasKnownValue && $b.hasKnownValue) {
         if ($op.getText().equals("plus")) {
 		      $exprString += " + " + $b.exprString;
           System.out.println($exprString);
+	          if ($hasKnownValue && $b.hasKnownValue)
           $value = $value + $b.value;
         } else {
 	        $exprString += " - " + $b.value;
+	          if ($hasKnownValue && $b.hasKnownValue)
           $value = $value - $b.value;
         }
-      } else {
-        $hasKnownValue = false;
-      }
     }
 	)*;
 
