@@ -199,6 +199,7 @@ grammar Simple;
 }
 prog:
 	(statement | functionDefinition)* {
+	    // TODO add import java.util.Scanner; and Scanner in = new Scanner(System.in); to top of file
 	     printDiagnostics();
        for(String line : globalCodeLines) {
           System.out.println(line);
@@ -458,8 +459,7 @@ functionCall
 
 input: input_decimal | input_string | input_number;
 
-// TODO need to import java.util.Scanner; in all files we compile Scanner in = new
-// Scanner(System.in);
+// TODO need to import java.util.Scanner; in all files we compile Scanner in = new Scanner(System.in);
 
 input_string:
 	'input string' {
