@@ -236,6 +236,7 @@ prog:
 	{openProgram();} (statement | functionDefinition)* {
 	     int numErrors = printDiagnostics();
        if(numErrors == 0) {
+        if(isDebug) System.out.println("\n––");
         System.out.println("Compile Successful");
         writeFile();
        } else {
