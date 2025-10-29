@@ -458,20 +458,19 @@ functionCall
 
 input: input_decimal | input_string | input_number;
 
-// TODO need to import java.util.Scanner; in all files we compile
+// TODO need to import java.util.Scanner; in all files we compile Scanner in = new
+// Scanner(System.in);
+
 input_string:
 	'input string' {
-	  // Scanner in = new Scanner(System.in);
     // int num = in.nextInt();
 };
 input_number:
 	'input number' {
-    // Scanner in = new Scanner(System.in);
     // int num = in.nextLine();
 };
 input_decimal:
 	'input decimal' {
-    // Scanner in = new Scanner(System.in);
     // int num = in.nextFloat();
 };
 
