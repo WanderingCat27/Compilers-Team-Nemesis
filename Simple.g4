@@ -214,7 +214,7 @@ grammar Simple;
   void writeFile() {
     try (PrintWriter pw = new PrintWriter("SimpleProgram.java", "UTF-8")) {
       for(String line : globalCodeLines) {
-          sb.append(line);
+          sb.append(line + "\n");
       } 
       pw.print(sb.toString());
       pw.print("}\n}\n");
@@ -224,9 +224,8 @@ grammar Simple;
 
   }
 }
-prog
-: {openProgram();}
- (statement | functionDefinition)* {
+prog:
+	{openProgram();} (statement | functionDefinition)* {
 	    // TODO add import java.util.Scanner; and  to top of file
 	     int numErrors = printDiagnostics();
        if(numErrors == 0) {
