@@ -1,8 +1,9 @@
 print "test"
 
 x=4
-
+x=3
 print x
+exp=3+3
 
 input number x
 
