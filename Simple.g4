@@ -210,11 +210,11 @@ assignment
 	name = VARIABLE_NAME '=' (
 		t = DECIMAL {
       $typeOf = Types.DOUBLE;
-	      $value = $t.getText();
+	    $value = $t.getText();
     }
 		| t = INT {
-     $typeOf = Types.INT;
-	     $value = $t.getText();
+      $typeOf = Types.INT;
+	    $value = $t.getText();
     }
 		| t = STRING {
       $typeOf = Types.STRING;
@@ -280,9 +280,9 @@ assignment
 };
 
 array:
-  ( '[' (INT ',')*? INT ']')
-  | ( '[' DECIMAL ','*? DECIMAL ']')
-  | ( '[' STRING ','*? STRING ']');
+	('[' (INT ',')*? INT ']')
+	| ( '[' DECIMAL ','*? DECIMAL ']')
+	| ( '[' STRING ','*? STRING ']');
 
 statement:
 	for_statement
@@ -418,7 +418,7 @@ functionDefinition
     }
 } (
 		statement
-    | ('define') {
+		| ('define') {
       error($n, "Error can't define function in a function");
     }
 		| ('return' varExprOrType | expr) {
@@ -458,9 +458,22 @@ functionCall
 
 input: input_decimal | input_string | input_number;
 
-input_string: 'input string';
-input_number: 'input number';
-input_decimal: 'input decimal';
+// TODO need to import java.util.Scanner; in all files we compile
+input_string:
+	'input string' {
+	  // Scanner in = new Scanner(System.in);
+    // int num = in.nextInt();
+};
+input_number:
+	'input number' {
+    // Scanner in = new Scanner(System.in);
+    // int num = in.nextLine();
+};
+input_decimal:
+	'input decimal' {
+    // Scanner in = new Scanner(System.in);
+    // int num = in.nextFloat();
+};
 
 printType
 	returns[Boolean hasKnownValue, String value, String code]:
