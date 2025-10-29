@@ -1,7 +1,7 @@
 print "test"
 
 x=4
-
+x=3
 print x
 
 input number x

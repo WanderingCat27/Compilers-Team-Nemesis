@@ -287,7 +287,9 @@ assignment
 
           } else { // if already exists then reassign
               newID.value = $value;
-              newID.type = $typeOf;
+              // newID.type = $typeOf; –– cannot change type after the fact
+              addCodeLine(newID.id + "=" + $value + ";");
+
           }
       System.out.println("Assigning | name: " + newID.id + " | value: " + newID.value + " | scope: " + newID.scope + " | Level: " + newID.scopeLevel + " | type: " + newID.type);
     }
