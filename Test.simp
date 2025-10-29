@@ -1,5 +1,1 @@
-define addTwoNums(x,y) {
-    return x plus y
-}
-z = addTwoNums(3, 4)
-print z
+print 4

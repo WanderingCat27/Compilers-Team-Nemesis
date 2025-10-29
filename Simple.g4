@@ -1,6 +1,6 @@
 grammar Simple;
 // -------- Parser Members: global state for simple semantic checks --------
-@header { import java.util.*; }
+@header { import java.util.*; import java.io.*;}
 
 @members {
   class Types {
@@ -188,24 +188,52 @@ grammar Simple;
     diagnostics.add("line " + t.getLine() + ":" + t.getCharPositionInLine() + " " + msg);
   }
 
-  void printDiagnostics() {
+  int printDiagnostics() {
+      int numErrors = 0;
       // After parsing the whole file: report unused variables and print errors.
       for (String d : diagnostics) {
         System.err.println("error: " + d);
+        numErrors++;
       }
       System.out.println();
+      return numErrors;
+  }
+  //Code generation
+  StringBuilder sb = new StringBuilder(); 
+  
+  
+  void emit(String s) {sb.append(s);}   
+  //File generation
+  void openProgram() {
+    emit("import java.util.*;\n");
+    emit("public class SimpleProgram {\n");
+    emit("  public static void main(String[] args) throws Exception {\n");
+    emit("    Scanner in = new Scanner(System.in);\n");
   }
 
+  void writeFile() {
+    try (PrintWriter pw = new PrintWriter("SimpleProgram.java", "UTF-8")) {
+      for(String line : globalCodeLines) {
+          sb.append(line);
+      } 
+      pw.print(sb.toString());
+      pw.print("}\n}\n");
+    } catch (Exception e) {
+      System.err.println("error: failed to write SimpleProgram.java: " + e.getMessage());
+    }
+
+  }
 }
-prog:
-	{
-	  addCodeLine("java.util.Scanner;");
-    addCodeLine("Scanner in = new Scanner(System.in);");
-} (statement | functionDefinition)* {
+prog
+: {openProgram();}
+ (statement | functionDefinition)* {
 	    // TODO add import java.util.Scanner; and  to top of file
-	     printDiagnostics();
-       for(String line : globalCodeLines) {
-          System.out.println(line);
+	     int numErrors = printDiagnostics();
+       if(numErrors == 0) {
+        writeFile();
+       } else {
+        
+        System.exit(1);
        }
 	  };
 
@@ -483,10 +511,10 @@ printType
 	returns[Boolean hasKnownValue, String value, String code]:
 	INT {
     $hasKnownValue = true; $value = $INT.getText(); 
-	  $code = "System.out.println($value)";
+	  $code = "System.out.println(" + $value + ");";
   }
 	| DECIMAL {$hasKnownValue = true; $value = $DECIMAL.getText();
-		  $code = "System.out.println($value)";
+		  $code = "System.out.println(" + $value + ");";
   }
 	| STRING {$hasKnownValue = true; $value = $STRING.getText();
 		  $code = "System.out.println("+$value+");";
