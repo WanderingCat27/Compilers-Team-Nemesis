@@ -198,7 +198,11 @@ grammar Simple;
 
 }
 prog:
-	(statement | functionDefinition)* {
+	{
+	  addCodeLine("java.util.Scanner;");
+    addCodeLine("Scanner in = new Scanner(System.in);");
+} (statement | functionDefinition)* {
+	    // TODO add import java.util.Scanner; and  to top of file
 	     printDiagnostics();
        for(String line : globalCodeLines) {
           System.out.println(line);
@@ -210,11 +214,11 @@ assignment
 	name = VARIABLE_NAME '=' (
 		t = DECIMAL {
       $typeOf = Types.DOUBLE;
-	      $value = $t.getText();
+	    $value = $t.getText();
     }
 		| t = INT {
-     $typeOf = Types.INT;
-	     $value = $t.getText();
+      $typeOf = Types.INT;
+	    $value = $t.getText();
     }
 		| t = STRING {
       $typeOf = Types.STRING;
@@ -280,13 +284,14 @@ assignment
 };
 
 array:
-  ( '[' (INT ',')*? INT ']')
-  | ( '[' DECIMAL ','*? DECIMAL ']')
-  | ( '[' STRING ','*? STRING ']');
+	('[' (INT ',')*? INT ']')
+	| ( '[' DECIMAL ','*? DECIMAL ']')
+	| ( '[' STRING ','*? STRING ']');
 
 statement:
 	for_statement
 	| while_statement
+	| input
 	| expr
 	| if_else
 	| assignment
@@ -418,7 +423,7 @@ functionDefinition
     }
 } (
 		statement
-    | ('define') {
+		| ('define') {
       error($n, "Error can't define function in a function");
     }
 		| ('return' varExprOrType | expr) {
@@ -458,9 +463,21 @@ functionCall
 
 input: input_decimal | input_string | input_number;
 
-input_string: 'input string';
-input_number: 'input number';
-input_decimal: 'input decimal';
+// TODO need to import java.util.Scanner; in all files we compile Scanner in = new Scanner(System.in);
+
+input_string:
+	'input string ' a = VARIABLE_NAME {
+		addCodeLine($a.getText()+"=in.nextInt();");
+};
+input_number:
+	'input number ' a = VARIABLE_NAME {
+	    addCodeLine($a.getText()+"=in.nextLine();");
+};
+input_decimal:
+	'input decimal ' a = VARIABLE_NAME {
+	    addCodeLine($a.getText()+"=in.nextFloat();");
+
+};
 
 printType
 	returns[Boolean hasKnownValue, String value, String code]:
