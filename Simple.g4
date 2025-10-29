@@ -233,7 +233,12 @@ grammar Simple;
   }
 }
 prog:
-	{openProgram();} (statement | functionDefinition)* {
+	{
+    openProgram();
+    // True : print debug messages like variable assigning and function creation/calls
+    // False : Don't. Just prints the errors and whether it compiled successfully or not
+    isDebug = false;
+    } (statement | functionDefinition)* {
 	     int numErrors = printDiagnostics();
        if(numErrors == 0) {
         if(isDebug) System.out.println("\n––");

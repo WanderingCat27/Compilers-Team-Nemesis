@@ -1,6 +1,6 @@
 print "this program will add two numbers"
-print "input first int"
-x=0
+print "input first int" 
+x=0 
 input number x
 y=0
 print "input second int"
