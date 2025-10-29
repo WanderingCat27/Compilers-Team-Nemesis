@@ -1,6 +1,6 @@
 grammar Simple;
 // -------- Parser Members: global state for simple semantic checks --------
-@header { import java.util.*; }
+@header { import java.util.*; import java.io.*;}
 
 @members {
   class Types {
@@ -188,31 +188,66 @@ grammar Simple;
     diagnostics.add("line " + t.getLine() + ":" + t.getCharPositionInLine() + " " + msg);
   }
 
-  void printDiagnostics() {
+  int printDiagnostics() {
+      int numErrors = 0;
       // After parsing the whole file: report unused variables and print errors.
       for (String d : diagnostics) {
         System.err.println("error: " + d);
+        numErrors++;
       }
       System.out.println();
+      return numErrors;
+  }
+  //Code generation
+  StringBuilder sb = new StringBuilder(); 
+  
+  
+  void emit(String s) {sb.append(s);}   
+  //File generation
+  void openProgram() {
+    emit("import java.util.*;\n");
+    emit("public class SimpleProgram {\n");
+    emit("  public static void main(String[] args) throws Exception {\n");
+    emit("    Scanner in = new Scanner(System.in);\n");
   }
 
+  void writeFile() {
+    try (PrintWriter pw = new PrintWriter("SimpleProgram.java", "UTF-8")) {
+      for(String line : globalCodeLines) {
+          sb.append(line);
+      } 
+      pw.print(sb.toString());
+      pw.print("}\n}\n");
+    } catch (Exception e) {
+      System.err.println("error: failed to write SimpleProgram.java: " + e.getMessage());
+    }
+
+  }
 }
-prog:
-	{
-	  addCodeLine("java.util.Scanner;");
-    addCodeLine("Scanner in = new Scanner(System.in);");
-} (statement | functionDefinition)* {
+prog
+: {openProgram();}
+ (statement | functionDefinition)* {
 	    // TODO add import java.util.Scanner; and  to top of file
-	     printDiagnostics();
-       for(String line : globalCodeLines) {
-          System.out.println(line);
+	     int numErrors = printDiagnostics();
+       if(numErrors == 0) {
+        writeFile();
+       } else {
+        
+        System.exit(1);
        }
 	  };
 
 assignment
 	locals[String value, String typeOf, boolean isError]:
 	name = VARIABLE_NAME '=' (
-		t = DECIMAL {
+		e = expr {
+      System.out.println("expression");
+      // can check if contains a decimal but doesnt check types of variables
+      $typeOf = $e.typeOf;
+      // $value = String.valueOf($e.value);
+      $value=$e.exprString;
+    }
+		| t = DECIMAL {
       $typeOf = Types.DOUBLE;
 	    $value = $t.getText();
     }
@@ -248,11 +283,6 @@ assignment
 	        $value = var.value;    
         $typeOf = var.type;
       }
-    }
-		| e = expr {
-      // can check if contains a decimal but doesnt check types of variables
-      $typeOf = Types.DOUBLE;
-      $value = String.valueOf($e.value);
     }
 	) {
     if(!$isError) {
@@ -314,8 +344,10 @@ statement:
 	| output;
 
 expr
-	returns[boolean hasKnownValue, float value]:
+	returns[boolean hasKnownValue, float value, String exprString, String typeOf]:
 	a = word {
+      $exprString = $a.exprString;
+      $typeOf = $a.isDouble ? Types.DOUBLE : Types.INT;
       if ($a.hasKnownValue) {
         $hasKnownValue = true;
         $value = $a.value;
@@ -324,10 +356,16 @@ expr
       } 
     } (
 		op = ('plus' | 'minus') b = word {
+      if($b.isDouble) {
+        $typeOf = Types.DOUBLE;
+      }
       if ($hasKnownValue && $b.hasKnownValue) {
         if ($op.getText().equals("plus")) {
+		      $exprString += " + " + $b.exprString;
+          System.out.println($exprString);
           $value = $value + $b.value;
         } else {
+	        $exprString += " - " + $b.value;
           $value = $value - $b.value;
         }
       } else {
@@ -337,14 +375,28 @@ expr
 	)*;
 
 word
-	returns[boolean hasKnownValue, float value]:
+	returns[boolean hasKnownValue, float value, String exprString, boolean isDouble]:
 	a = factor {
+      $exprString = $a.factorString;
+      $isDouble = $a.isDouble;
       if ($a.hasKnownValue) {
         $hasKnownValue = true;
         $value = $a.value;
       } else $hasKnownValue = false;
     } (
 		op = ('multiply' | 'divide' | 'mod') b = factor {
+        if($op.getText().equals("divide")) {
+              $exprString += " / " + $b.factorString;
+	        } else if($op.getText().equals("multiply")) {
+              $exprString += " * " + $b.factorString;
+	        } else if($op.getText().equals("mod")) {
+              $exprString +=" % " + $b.factorString;
+        } 
+        if($b.isDouble) {          
+	          $isDouble = true;
+        }
+
+
         if ($b.hasKnownValue && $op.getText().equals("divide") && $b.value == 0) {
           $hasKnownValue = false;
         } else if ($hasKnownValue && $b.hasKnownValue) {
@@ -360,20 +412,39 @@ word
 	)*;
 
 factor
-	returns[boolean hasKnownValue, float value]:
-	INT { $hasKnownValue = true; $value = Integer.parseInt($INT.getText()); }
-	| DECIMAL {$hasKnownValue = true; $value = Float.parseFloat($DECIMAL.getText());}
+	returns[boolean hasKnownValue, float value, String factorString, boolean isDouble]:
+	INT {
+      $hasKnownValue = true; 
+      $value = Integer.parseInt($INT.getText()); 
+		  $factorString = ""+$INT.getText();
+    }
+	| DECIMAL {
+	  $isDouble = true;
+    $hasKnownValue = true; 
+    $value = Float.parseFloat($DECIMAL.getText());
+		    $factorString = ""+$DECIMAL.getText();
+    }
 	| VARIABLE_NAME {
         String id = $VARIABLE_NAME.getText();
+	      $factorString=id;
         used.add(id);
         // If we're in the middle of first assignment to VARIABLE_NAME (self-reference):
         if (!doesVariableExist(id)) {
           // General use-before-assign.
           error($VARIABLE_NAME, "use of variable '" + id + "' before assignment");
+        } else {
+          String t = getVariable(id).type;
+          if(t.equals(Types.DOUBLE)) {
+            $isDouble = true;
+	          } else if(!t.equals(Types.INT)) {
+	            error($VARIABLE_NAME, id + " is not an int or double");
+          }
         }
         $hasKnownValue = false;
       }
 	| '(' expr ')' { 
+		    $factorString = '('+ $expr.exprString +')';
+        $isDouble = $expr.typeOf.equals(Types.DOUBLE);
         if ($expr.hasKnownValue) {
           $hasKnownValue = true;
           $value = $expr.value;
@@ -496,10 +567,10 @@ printType
 	returns[Boolean hasKnownValue, String value, String code]:
 	INT {
     $hasKnownValue = true; $value = $INT.getText(); 
-	  $code = "System.out.println($value)";
+	  $code = "System.out.println(" + $value + ");";
   }
 	| DECIMAL {$hasKnownValue = true; $value = $DECIMAL.getText();
-		  $code = "System.out.println($value)";
+		  $code = "System.out.println(" + $value + ");";
   }
 	| STRING {$hasKnownValue = true; $value = $STRING.getText();
 		  $code = "System.out.println("+$value+");";
