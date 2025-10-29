@@ -241,7 +241,7 @@ assignment
       if(var == null) {
           error($v, "Error variable " + $v.getText() + " does not exist");
           $isError = true;
-      } else if (var.scope != "global" && var.scope != getScope()){
+      } else if (var.scope != "global" && var.scope != getScope()) {
           error($v, "Error attempting to assign a variable that is not defined (there is a variable defined that is out of scope)");
           $isError = true;
       } else {
@@ -274,6 +274,17 @@ assignment
       if(doAssign){
           if(newID == null) { // if not already exists create new var
                 newID = createVariable($name.getText(), $value, $typeOf);
+                String assignmentString = "";
+                if($typeOf.equals(Types.DOUBLE)) {
+                    assignmentString = "double ";
+	                } else if($typeOf.equals(Types.INT)) {
+                    assignmentString = "int ";
+                  } else if($typeOf.equals(Types.STRING)) {
+                    assignmentString = "String ";
+                  } // TODO add arrays and function calls, ideally remove unknown
+                  assignmentString += newID.id + "=" + $value + ";";
+                  addCodeLine(assignmentString);
+
           } else { // if already exists then reassign
               newID.value = $value;
               newID.type = $typeOf;
@@ -467,15 +478,15 @@ input: input_decimal | input_string | input_number;
 
 input_string:
 	'input string ' a = VARIABLE_NAME {
-		addCodeLine($a.getText()+"=in.nextInt();");
+    addCodeLine($a.getText()+"=in.nextLine();");
 };
 input_number:
 	'input number ' a = VARIABLE_NAME {
-	    addCodeLine($a.getText()+"=in.nextLine();");
+    addCodeLine($a.getText()+"=in.nextInt();");
 };
 input_decimal:
 	'input decimal ' a = VARIABLE_NAME {
-	    addCodeLine($a.getText()+"=in.nextFloat();");
+    addCodeLine($a.getText()+"=in.nextFloat();");
 
 };
 
