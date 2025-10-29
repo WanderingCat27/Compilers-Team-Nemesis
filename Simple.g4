@@ -214,7 +214,7 @@ grammar Simple;
   void writeFile() {
     try (PrintWriter pw = new PrintWriter("SimpleProgram.java", "UTF-8")) {
       for(String line : globalCodeLines) {
-          sb.append(line);
+          sb.append(line + "\n");
       } 
       pw.print(sb.toString());
       pw.print("}\n}\n");
@@ -224,9 +224,8 @@ grammar Simple;
 
   }
 }
-prog
-: {openProgram();}
- (statement | functionDefinition)* {
+prog:
+	{openProgram();} (statement | functionDefinition)* {
 	    // TODO add import java.util.Scanner; and  to top of file
 	     int numErrors = printDiagnostics();
        if(numErrors == 0) {
@@ -241,7 +240,7 @@ assignment
 	locals[String value, String typeOf, boolean isError]:
 	name = VARIABLE_NAME '=' (
 		e = expr {
-      System.out.println("expression");
+      System.out.println("expression: " + $e.exprString);
       // can check if contains a decimal but doesnt check types of variables
       $typeOf = $e.typeOf;
       // $value = String.valueOf($e.value);
@@ -359,18 +358,16 @@ expr
       if($b.isDouble) {
         $typeOf = Types.DOUBLE;
       }
-      if ($hasKnownValue && $b.hasKnownValue) {
         if ($op.getText().equals("plus")) {
 		      $exprString += " + " + $b.exprString;
           System.out.println($exprString);
+	          if ($hasKnownValue && $b.hasKnownValue)
           $value = $value + $b.value;
         } else {
 	        $exprString += " - " + $b.value;
+	          if ($hasKnownValue && $b.hasKnownValue)
           $value = $value - $b.value;
         }
-      } else {
-        $hasKnownValue = false;
-      }
     }
 	)*;
 
