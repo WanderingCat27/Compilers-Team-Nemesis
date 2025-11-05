@@ -415,6 +415,10 @@ statement:
 	| functionCall
 	| output;
 
+append_to_array:
+	'array add ' n = VARIABLE_NAME v = varExprOrType {
+  addCodeLine($n.getText() + ".add(" + $v.asText + ");");
+};
 expr
 	returns[boolean hasKnownValue, float value, String exprString, String typeOf]:
 	a = word {
