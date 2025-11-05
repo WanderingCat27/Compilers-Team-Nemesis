@@ -1,0 +1,8 @@
+x=5
+is x greater than 3 {
+    x=4
+} if not is x not less than 4{
+    x=44
+} if not {
+    x=444
+}

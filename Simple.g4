@@ -463,35 +463,74 @@ factor
         } else {
           $hasKnownValue = false;
         }
-      };
+	      };
 
-conditional_statement: (
-		'not'? (
-			'equal to'
-			| 'greater than'
-			| 'less than'
-			| 'less than or equal to'
-			| 'greater than or equal to'
+conditional_statement
+	returns[String conditionSign, boolean isNot]: (
+		(
+			'not' {
+      $isNot = true;
+    }
+		)? (
+			'equal to' {
+      $conditionSign = "==";
+      }
+			| 'less than or equal to' {
+      $conditionSign = "==";
+      }
+			| 'greater than or equal to' {
+      $conditionSign = "==";
+      }
+			| 'greater than' {
+      $conditionSign = "==";
+      }
+			| 'less than' {
+      $conditionSign = "==";
+      }
 		)
 	);
-condition: varExprOrType conditional_statement varExprOrType;
+condition
+	returns[String conditional]:
+	a = varExprOrType {
+	    $conditional=$a.asText;
+} c = conditional_statement {
+if($c.isNot) $conditional = "!(" + $conditional;
+	$conditional += $c.conditionSign;
+} b = varExprOrType {
+		$conditional+=$b.asText;
+    if($c.isNot) $conditional +=")";
+    System.out.println($conditional);
+};
 
-if_statement: 'is' condition;
-else_statement: 'if not';
+if_statement
+	returns[String conditional]:
+	'is' c = condition {
+	  $conditional = $c.conditional;
+    addCodeLine("if(" + $conditional + ")");
+};
+else_statement:
+	'if not' {
+  addCodeLine("else");
+};
 
-if_scope: '{' {addScopeLevel();} prog '}' {removeScopeLevel();};
+if_scope:
+	'{' {
+    addScopeLevel();
+    addCodeLine("{"); // } – for some reason quoted brackets mess up vscode
+    } statement* '}' {removeScopeLevel();
+    // { – for some reason quoted brackets mess up vscode
+    addCodeLine("}");
+    };
 
 if_else:
 	if_statement if_scope (else_statement if_statement if_scope)* (
 		else_statement if_scope
 	)?;
 
-for_statement returns[Int repeats, String code]: 
+for_statement //returns[Int repeats, String code]
+: 
   'repeat' (INT) loopScope
-  {
-   $repeats = Interger.parseInt($INT.getText());
-   $code = "for (int i=0; i<" + $repeats + "; i++) {" + ; 
-  }
+
   ;
 while_statement: 'while' condition loopScope;
 loopScope:
@@ -618,7 +657,14 @@ output:
 		  addCodeLine($printType.code);
   };
 
-varExprOrType: expr | VARIABLE_NAME type;
+varExprOrType
+	returns[String asText]:
+	e = expr {
+	    $asText = $e.exprString;
+  }
+	| (t = VARIABLE_NAME | t = STRING | t = BOOL) {
+    $asText=$t.getText();
+  };
 type: INT | STRING | DECIMAL | BOOL;
 
 STRING: '"' ( ~["])* '"';
