@@ -5,6 +5,10 @@ print x
 
 * arrays are indexed starting at 1
 remove index 1 from x 
-print "removed item at index 1 (arrays are indexed starting at 1 not 0)"
+print "\nremoved item at index 1 (arrays are indexed starting at 1 not 0)"
 
+print x
+
+print "\nclearing x"
+clear x
 print x

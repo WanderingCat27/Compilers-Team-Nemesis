@@ -355,6 +355,9 @@ assignment
                 }
 
           } else { // if already exists then reassign
+	              if($typeOf.equals(Types.ARRAY)){
+	                error($name,"Cannot reassign arrays");
+                }
               newID.value = $value;
               // newID.type = $typeOf; –– cannot change type after the fact
               addCodeLine(newID.id + "=" + $value + ";");
@@ -414,6 +417,7 @@ statement:
 	append_to_array
 	| assignment
 	| remove_from_array
+	| clear_array
 	| for_statement
 	| while_statement
 	| input
@@ -423,6 +427,10 @@ statement:
 	| functionCall
 	| output;
 
+clear_array:
+	'clear ' n = VARIABLE_NAME {
+  addCodeLine($n.getText() + ".clear();");
+};
 append_to_array:
 	'add ' v = varExprOrType ' to ' n = VARIABLE_NAME {
   addCodeLine($n.getText() + ".add(" + $v.asText + ");");
@@ -605,13 +613,22 @@ for_statement
 	returns[String repeats]:
 	'repeat' INT {
    $repeats = $INT.getText();
-   addCodeLine("for (int i=0; i<" + $repeats + "; i++)" + "{"); 
+   String i_name = "____protected_index____" + getScopeLevel();
+		   addCodeLine("for (int " +i_name +" = 0; " +i_name +" < " + $repeats + "; " +i_name +"++)" + " {"); // } 
   } loopScope;
 while_statement: 'while' condition loopScope;
 loopScope:
 	'{' {
 	  addScopeLevel();
-    } (statement | 'continue' | 'break')* '}' {removeScopeLevel();
+    } (
+		statement
+		| 'continue' {
+	       addCodeLine("continue;");   
+    }
+		| 'break' {
+	      addCodeLine("break;");   
+    }
+	)* '}' {removeScopeLevel();
     // { – for some reason quoted brackets mess up vscode
     addCodeLine("}");
     };
