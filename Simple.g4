@@ -401,11 +401,14 @@ array
   }
 		)
 	) ']' {
-	    System.out.println("ARRAY: typeOf: " + $typeOf + " | values: " + String.join(", ", $values));
+	    if(isDebug){
+	      System.out.println("CREATED ARRAY: typeOf: " + $typeOf + " | values: " + String.join(", ", $values));
+      }
   };
 
 statement:
 	append_to_array
+	| remove_from_array
 	| for_statement
 	| while_statement
 	| input
@@ -417,8 +420,13 @@ statement:
 	| output;
 
 append_to_array:
-	'list ' n = VARIABLE_NAME ' add ' v = varExprOrType {
+	'add ' v = varExprOrType ' to ' n = VARIABLE_NAME {
   addCodeLine($n.getText() + ".add(" + $v.asText + ");");
+};
+remove_from_array:
+	'remove index ' i = INT ' from ' n = VARIABLE_NAME {
+	int index = Integer.parseInt($i.getText()) - 1;
+  addCodeLine($n.getText() + ".remove(" + index + ");");
 };
 expr
 	returns[boolean hasKnownValue, float value, String exprString, String typeOf]:
