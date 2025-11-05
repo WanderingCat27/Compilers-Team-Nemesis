@@ -486,7 +486,13 @@ if_else:
 		else_statement if_scope
 	)?;
 
-for_statement: 'repeat' (INT) loopScope;
+for_statement returns[Int repeats, String code]: 
+  'repeat' (INT) loopScope
+  {
+   $repeats = Interger.parseInt($INT.getText());
+   $code = "for (int i=0; i<" + $repeats + "; i++) {" + ; 
+  }
+  ;
 while_statement: 'while' condition loopScope;
 loopScope:
 	'{' {
