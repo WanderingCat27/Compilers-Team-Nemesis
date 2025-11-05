@@ -9,6 +9,7 @@ grammar Simple;
     static String STRING = "string";
     static String INT = "int";
     static String DOUBLE = "double";
+    static String ARRAY= "array";
     static String UNKNOWN = "unknown";
   }
 
@@ -273,6 +274,10 @@ assignment
       $typeOf = Types.STRING;
 	    $value = $t.getText();
     }
+		| a = array {
+      $typeOf=Types.ARRAY;
+      $value="[]";
+    }
 		| f = functionCall {
       if(!$f.isSuccess) {
         $isError = true;
@@ -325,9 +330,29 @@ assignment
                     assignmentString = "int ";
                   } else if($typeOf.equals(Types.STRING)) {
                     assignmentString = "String ";
-                  } // TODO add arrays and function calls, ideally remove unknown
-                  assignmentString += newID.id + "=" + $value + ";";
+	                  } else if($typeOf.equals(Types.ARRAY)) {
+                    assignmentString = "ArrayList<" + $a.javaType +"> ";
+                      assignmentString += newID.id + "= new ArrayList<" + $a.javaType + ">();";
                   addCodeLine(assignmentString);
+		              String appendString = "Collections.addAll("+newID.id+", new "+ $a.javaType +"[]{";
+                  // add values
+                  boolean isFirst = true;
+                  for(String v : $a.values) {
+                    if(isFirst) {
+                      isFirst=false;
+                      appendString += v;
+                      continue;
+                    }
+	                    appendString += "," + v;
+                  }
+                  appendString+="});";
+                  addCodeLine(appendString);
+
+                }
+              if(!$typeOf.equals(Types.ARRAY)){
+	                assignmentString += $name.getText() + "=" + $value + ";";
+                  addCodeLine(assignmentString);
+                }
 
           } else { // if already exists then reassign
               newID.value = $value;
@@ -341,10 +366,43 @@ assignment
   }
 };
 
-array:
-	('[' (INT ',')*? INT ']')
-	| ( '[' DECIMAL ','*? DECIMAL ']')
-	| ( '[' STRING ','*? STRING ']');
+array
+	returns[String typeOf, String javaType, ArrayList<String> values]:
+	'[' {
+    $values=new ArrayList<String>();
+  } (
+		(
+			(
+				v = INT {
+    $typeOf = Types.INT;
+	  $javaType = "Integer";
+    $values.add($v.getText());
+  } ','
+			)*? v = INT {
+	    $values.add($v.getText());
+  }
+		)
+		| (
+			v = DECIMAL {
+    $typeOf = Types.STRING;
+    $javaType = "Double";
+    $values.add($v.getText());
+  } ','*? v = DECIMAL {
+	    $values.add($v.getText());
+  }
+		)
+		| (
+			v = STRING {
+    $typeOf = Types.INT;
+    $javaType = "String";
+    $values.add($v.getText());
+	  } ','*? v = STRING {
+	    $values.add($v.getText());
+  }
+		)
+	) ']' {
+	    System.out.println("ARRAY: typeOf: " + $typeOf + " | values: " + String.join(", ", $values));
+  };
 
 statement:
 	for_statement
@@ -355,9 +413,12 @@ statement:
 	| assignment
 	| condition
 	| functionCall
-	| array
 	| output;
 
+append_to_array:
+	'array add ' n = VARIABLE_NAME v = varExprOrType {
+  addCodeLine($n.getText() + ".add(" + $v.asText + ");");
+};
 expr
 	returns[boolean hasKnownValue, float value, String exprString, String typeOf]:
 	a = word {
@@ -472,8 +533,10 @@ conditional_statement
       $isNot = true;
     }
 		)? (
-			
-			 'less than or equal to' {
+			'equal to' {
+      $conditionSign = "==";
+      }
+			| 'less than or equal to' {
       $conditionSign = "<=";
       }
 			| 'greater than or equal to' {
@@ -484,9 +547,6 @@ conditional_statement
       }
 			| 'less than' {
       $conditionSign = "<";
-      }
-      |'equal to' {
-      $conditionSign = "==";
       }
 		)
 	);
@@ -648,7 +708,7 @@ printType
           // General use-before-assign.
           error($VARIABLE_NAME, "use of variable '" + id + "' before assignment");
         } else{
-		          $code = "System.out.println(" + id + ");";
+            $code = "System.out.println(" + id + ");";
         }
         $hasKnownValue = false;
       }
