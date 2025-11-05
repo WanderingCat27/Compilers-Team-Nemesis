@@ -1,0 +1,12 @@
+i=0
+j=0
+repeat 10 {
+    i = i plus 1
+    print i
+    j=i
+    repeat 5 {
+        j = j plus 1
+        print j
+    }
+    print "\n------\n"
+}

@@ -1,18 +1,21 @@
 print "test"
 x=[1,2,3,4,5]
-<<<<<<< HEAD
+
 list x add 5
 print x greater than 0 {
     print "hi"
     x = x minus 1
 }
-=======
+
 add 5 to x
 print x
 
 * arrays are indexed starting at 1
 remove index 1 from x 
-print "removed item at index 1 (arrays are indexed starting at 1 not 0)"
+print "\nremoved item at index 1 (arrays are indexed starting at 1 not 0)"
 
 print x
->>>>>>> ab629d78e3c1d51b5601a3c48493ce7cecb33f8b
+
+print "\nclearing x"
+clear x
+print x
