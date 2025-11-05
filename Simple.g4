@@ -216,8 +216,8 @@ grammar Simple;
   void openProgram() {
     emit("import java.util.*;\n");
     emit("public class SimpleProgram {\n");
+    emit("static Scanner in = new Scanner(System.in);\n");
     emit("  public static void main(String[] args) throws Exception {\n");
-    emit("    Scanner in = new Scanner(System.in);\n");
   }
 
   void writeFile() {
@@ -383,20 +383,24 @@ array
   }
 		)
 		| (
-			v = DECIMAL {
-    $typeOf = Types.STRING;
+			(
+				v = DECIMAL {
+    $typeOf = Types.DOUBLE;
     $javaType = "Double";
     $values.add($v.getText());
-  } ','*? v = DECIMAL {
+  } ','
+			)*? v = DECIMAL {
 	    $values.add($v.getText());
   }
 		)
 		| (
-			v = STRING {
-    $typeOf = Types.INT;
+			(
+				v = STRING {
+    $typeOf = Types.STRING;
     $javaType = "String";
     $values.add($v.getText());
-	  } ','*? v = STRING {
+	  } ','
+			)*? v = STRING {
 	    $values.add($v.getText());
   }
 		)
@@ -408,13 +412,13 @@ array
 
 statement:
 	append_to_array
+	| assignment
 	| remove_from_array
 	| for_statement
 	| while_statement
 	| input
 	| expr
 	| if_else
-	| assignment
 	| condition
 	| functionCall
 	| output;
@@ -597,13 +601,12 @@ if_else:
 		else_statement if_scope
 	)?;
 
-for_statement returns[String repeats]
-: 
-  'repeat' INT {
+for_statement
+	returns[String repeats]:
+	'repeat' INT {
    $repeats = $INT.getText();
    addCodeLine("for (int i=0; i<" + $repeats + "; i++)" + "{"); 
-  } loopScope
-  ;
+  } loopScope;
 while_statement: 'while' condition loopScope;
 loopScope:
 	'{' {
@@ -611,8 +614,7 @@ loopScope:
     } (statement | 'continue' | 'break')* '}' {removeScopeLevel();
     // { – for some reason quoted brackets mess up vscode
     addCodeLine("}");
-    }
-    ;
+    };
 
 functionDefinition
 	returns[String name, int arity, boolean doesReturn]
@@ -680,8 +682,6 @@ functionCall
   };
 
 input: input_decimal | input_string | input_number;
-
-// TODO need to import java.util.Scanner; in all files we compile Scanner in = new Scanner(System.in);
 
 input_string:
 	'input string ' a = VARIABLE_NAME {
