@@ -2,10 +2,14 @@ import java.util.*;
 public class SimpleProgram {
   public static void main(String[] args) throws Exception {
     Scanner in = new Scanner(System.in);
-System.out.println("test");
-ArrayList<Integer> x= new ArrayList<Integer>();
-Collections.addAll(x, new Integer[]{1,2,3,4,5});
-x.add(5);
-System.out.println(x);
+System.out.println(20);
+double x=5.0;
+for (int i=0; i<5; i++){
+System.out.println(1);
+}
+while(x>0) {
+System.out.println("hi");
+x=x - 1.0;
+}
 }
 }

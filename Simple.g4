@@ -593,10 +593,15 @@ for_statement returns[String repeats]
 : 
   'repeat' INT {
    $repeats = $INT.getText();
-   addCodeLine("for (int i=0; i<" + $repeats + "; i++)" + "{"); 
+   addCodeLine("for (int i=0; i<" + $repeats + "; i++)" + "{"); //}
   } loopScope
   ;
-while_statement: 'while' condition loopScope;
+while_statement returns[String conditional]
+: 'while' c = condition {
+    $conditional = $c.conditional;
+    addCodeLine("while(" + $conditional + ") {"); //}
+  }
+  loopScope;
 loopScope:
 	'{' {
 	  addScopeLevel();
