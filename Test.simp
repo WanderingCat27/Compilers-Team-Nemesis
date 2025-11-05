@@ -1,5 +1,9 @@
 print 20
-x = 5
+x = 5.0
 repeat 5 {
     print 1
+}
+while x greater than 0 {
+    print "hi"
+    x = x minus 1
 }
