@@ -472,19 +472,20 @@ conditional_statement
       $isNot = true;
     }
 		)? (
-			'equal to' {
-      $conditionSign = "==";
-      }
-			| 'less than or equal to' {
-      $conditionSign = "==";
+			
+			 'less than or equal to' {
+      $conditionSign = "<=";
       }
 			| 'greater than or equal to' {
-      $conditionSign = "==";
+      $conditionSign = ">=";
       }
 			| 'greater than' {
-      $conditionSign = "==";
+      $conditionSign = ">";
       }
 			| 'less than' {
+      $conditionSign = "<";
+      }
+      |'equal to' {
       $conditionSign = "==";
       }
 		)
@@ -527,16 +528,22 @@ if_else:
 		else_statement if_scope
 	)?;
 
-for_statement //returns[Int repeats, String code]
+for_statement returns[String repeats]
 : 
-  'repeat' (INT) loopScope
-
+  'repeat' INT {
+   $repeats = $INT.getText();
+   addCodeLine("for (int i=0; i<" + $repeats + "; i++)" + "{"); 
+  } loopScope
   ;
 while_statement: 'while' condition loopScope;
 loopScope:
 	'{' {
 	  addScopeLevel();
-} (statement | 'continue' | 'break')* '}' {removeScopeLevel();};
+    } (statement | 'continue' | 'break')* '}' {removeScopeLevel();
+    // { – for some reason quoted brackets mess up vscode
+    addCodeLine("}");
+    }
+    ;
 
 functionDefinition
 	returns[String name, int arity, boolean doesReturn]

@@ -1,2 +1,5 @@
 print 20
 x = 5
+repeat 5 {
+    print 1
+}

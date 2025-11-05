@@ -1,15 +1,11 @@
 import java.util.*;
-
 public class SimpleProgram {
   public static void main(String[] args) throws Exception {
     Scanner in = new Scanner(System.in);
-    int x = 5;
-    if (x == 3) {
-      x = 4;
-    } else if (!(x == 4)) {
-      x = 44;
-    } else {
-      x = 444;
-    }
-  }
+System.out.println(20);
+int x=5;
+for (int i=0; i<5; i++){
+System.out.println(1);
+}
+}
 }
