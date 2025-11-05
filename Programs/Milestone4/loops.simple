@@ -1,12 +1,23 @@
 i=0
 j=0
-repeat 10 {
+
+print "for"
+repeat 3 {
     i = i plus 1
     print i
     j=i
-    repeat 5 {
+    repeat 3 {
         j = j plus 1
         print j
     }
     print "\n------\n"
+}
+
+print "while"
+x = 5.0
+while x greater than 0 {
+    print "hi"
+    print "x is greater than 0: "
+    print x
+    x = x minus 1
 }

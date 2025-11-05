@@ -1,13 +1,7 @@
 print "test"
 x=[1,2,3,4,5]
-
-list x add 5
-print x greater than 0 {
-    print "hi"
-    x = x minus 1
-}
-
 add 5 to x
+
 print x
 
 * arrays are indexed starting at 1
