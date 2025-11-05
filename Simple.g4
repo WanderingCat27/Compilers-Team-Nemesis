@@ -538,16 +538,16 @@ conditional_statement
       $conditionSign = "==";
       }
 			| 'less than or equal to' {
-      $conditionSign = "==";
+      $conditionSign = "<=";
       }
 			| 'greater than or equal to' {
-      $conditionSign = "==";
+      $conditionSign = ">=";
       }
 			| 'greater than' {
-      $conditionSign = "==";
+      $conditionSign = ">";
       }
 			| 'less than' {
-      $conditionSign = "==";
+      $conditionSign = "<";
       }
 		)
 	);
