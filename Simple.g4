@@ -614,9 +614,15 @@ for_statement
 	'repeat' INT {
    $repeats = $INT.getText();
    String i_name = "____protected_index____" + getScopeLevel();
-		   addCodeLine("for (int " +i_name +" = 0; " +i_name +" < " + $repeats + "; " +i_name +"++)" + " {"); // } 
+	 addCodeLine("for (int " +i_name +" = 0; " +i_name +" < " + $repeats + "; " +i_name +"++)" + " {"); // } 
   } loopScope;
-while_statement: 'while' condition loopScope;
+
+while_statement
+	returns[String conditional]:
+	'while' c = condition {
+    $conditional = $c.conditional;
+    addCodeLine("while(" + $conditional + ") {"); //}
+  } loopScope;
 loopScope:
 	'{' {
 	  addScopeLevel();
