@@ -1,4 +1,10 @@
 print "test"
 x=[1,2,3,4,5]
-list x add 5
+add 5 to x
+print x
+
+* arrays are indexed starting at 1
+remove index 1 from x 
+print "removed item at index 1 (arrays are indexed starting at 1 not 0)"
+
 print x
