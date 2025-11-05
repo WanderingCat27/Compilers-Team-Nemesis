@@ -405,7 +405,8 @@ array
   };
 
 statement:
-	for_statement
+	append_to_array
+	| for_statement
 	| while_statement
 	| input
 	| expr
@@ -416,7 +417,7 @@ statement:
 	| output;
 
 append_to_array:
-	'array add ' n = VARIABLE_NAME v = varExprOrType {
+	'list ' n = VARIABLE_NAME ' add ' v = varExprOrType {
   addCodeLine($n.getText() + ".add(" + $v.asText + ");");
 };
 expr
