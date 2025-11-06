@@ -1,12 +1,2 @@
-print "test"
-
-x=4.3
-x=3
+x = true
 print x
-exp=(3 plus 3) multiply 44 divide x
-print exp
-
-print "input any number"
-input number x
-print 4
-

@@ -10,6 +10,7 @@ grammar Simple;
     static String INT = "int";
     static String DOUBLE = "double";
     static String ARRAY= "array";
+    static String BOOL = "boolean";
     static String UNKNOWN = "unknown";
   }
 
@@ -274,6 +275,10 @@ assignment
       $typeOf = Types.STRING;
 	    $value = $t.getText();
     }
+		| t = BOOL {
+      $typeOf = Types.BOOL;
+      $value = $t.getText().toLowerCase();
+    }
 		| a = array {
       $typeOf=Types.ARRAY;
       $value="[]";
@@ -326,7 +331,10 @@ assignment
                 String assignmentString = "";
                 if($typeOf.equals(Types.DOUBLE)) {
                     assignmentString = "double ";
-	                } else if($typeOf.equals(Types.INT)) {
+		                } else if($typeOf.equals(Types.BOOL)) {
+                    assignmentString = "boolean ";
+                  }
+                  else if($typeOf.equals(Types.INT)) {
                     assignmentString = "int ";
                   } else if($typeOf.equals(Types.STRING)) {
                     assignmentString = "String ";
@@ -618,12 +626,12 @@ for_statement
 	 addCodeLine("for (int " +i_name +" = 0; " +i_name +" < " + $repeats + "; " +i_name +"++)" + " {"); // } 
   } loopScope;
 
-while_statement returns[String conditional]
-: 'while' c = condition {
+while_statement
+	returns[String conditional]:
+	'while' c = condition {
     $conditional = $c.conditional;
     addCodeLine("while(" + $conditional + ") {"); //}
-  }
-  loopScope;
+  } loopScope;
 
 loopScope:
 	'{' {
@@ -760,17 +768,17 @@ output:
 
 varExprOrType
 	returns[String asText]:
-	e = expr {
-	    $asText = $e.exprString;
-  }
-	| (t = VARIABLE_NAME | t = STRING | t = BOOL) {
+	(t = VARIABLE_NAME | t = STRING | t = BOOL) {
     $asText=$t.getText();
+  }
+	| e = expr {
+	    $asText = $e.exprString;
   };
 type: INT | STRING | DECIMAL | BOOL;
 
 STRING: '"' ( ~["])* '"';
 INT: '-'? [0-9]+;
-BOOL: 'True' | 'False';
+BOOL: 'True' | 'False' | 'true' | 'false';
 DECIMAL: '-'? [0-9]* '.' [0-9]*;
 VARIABLE_NAME: ([a-z] | [A-Z] | '_')+;
 COMMENT_LINE: '*' ~[\n\r]* -> skip;
