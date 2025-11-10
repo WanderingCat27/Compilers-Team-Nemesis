@@ -665,6 +665,7 @@ functionDefinition
           if(isDebug)
 	          System.out.println("Adding " + varName + " to " + $name + " scope");
       }
+      addCodeLine();
     }
 } (
 		statement
