@@ -453,21 +453,28 @@ remove_from_array
 		      $index_code = "" + (Integer.parseInt($i.getText()) - 1);
 	  }
 		| i_v = VARIABLE_NAME {
-	      $index_code = $i_v.getText();
+	      $index_code = $i_v.getText() + "-1";
     }
 	) ' from ' n = VARIABLE_NAME {
 	  addCodeLine($n.getText() + ".remove(" + $index_code + ");");
 };
 
-get_from_array:
-	v = VARIABLE_NAME '= get index ' i = INT ' from ' n = VARIABLE_NAME {
+get_from_array
+	locals[String index_code]:
+	v = VARIABLE_NAME '= get index ' (
+		i = INT {
+		      $index_code = "" + (Integer.parseInt($i.getText()) - 1);
+	  }
+		| i_v = VARIABLE_NAME {
+	      $index_code = $i_v.getText() + "-1";
+    }
+	) ' from ' n = VARIABLE_NAME {
   Identifier arrayID = getVariable($n.getText());
   Identifier newID = getVariable($v.getText());
     if(arrayID == null)  {
 	      error($n, "array does not exist");
     } else {
       if(newID == null) {
-          int index = Integer.parseInt($i.getText()) - 1;
           newID = createVariable($v.getText(), "", arrayID.arrayType);
         } 
 
@@ -475,9 +482,8 @@ get_from_array:
         error($n, "type of array does not match type of variable");
       }  else {
         String type = newID.type;
-        int index = Integer.parseInt($i.getText()) - 1;
 
-        addCodeLine(type + " " + $v.getText() + "="+$n.getText() + ".get(" + index + ");");
+        addCodeLine(type + " " + $v.getText() + "="+$n.getText() + ".get(" + $index_code + ");");
       }
     }
 };
