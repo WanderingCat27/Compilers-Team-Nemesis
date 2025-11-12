@@ -18,7 +18,7 @@ print "removing index 2"
 remove index 2 from list
 print list
 
-print
+print "\n"
 
 print "Clearing list"
 clear list
