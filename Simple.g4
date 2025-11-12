@@ -650,13 +650,17 @@ loopScope:
     };
 
 functionDefinition
-	returns[String name, int arity, boolean doesReturn]
-	locals[ArrayList<String> variableParamNames]:
-	'define' n = VARIABLE_NAME {
+	returns[String name, int arity, boolean doesReturn, String returnType]
+	locals[ArrayList<String> variableParamNames, ArrayList<String> varType]:
+	'define' r = VARIABLE_NAME {
+    $returnType = $r.getText();
+  }
+  n = VARIABLE_NAME {
     $name = $n.getText();
 	    $variableParamNames = new ArrayList<String>();
   } '(' (
 		VARIABLE_NAME {
+          
 		      $variableParamNames.add($VARIABLE_NAME.getText());
     } (
 			',' VARIABLE_NAME {
@@ -673,7 +677,6 @@ functionDefinition
           if(isDebug)
 	          System.out.println("Adding " + varName + " to " + $name + " scope");
       }
-      addCodeLine();
     }
 } (
 		statement
@@ -686,6 +689,11 @@ functionDefinition
 	)* '}' {
 	    $arity = $variableParamNames.size();
     createFunction($name, $arity, $doesReturn);
+    if ($doesReturn == true) {
+      //addCodeLine("public ");
+    } else {
+      addCodeLine("public void " + $name + "(" + $variableParamNames + ")");
+    }
   exitMainScope();
 };
 
