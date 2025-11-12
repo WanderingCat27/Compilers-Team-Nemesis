@@ -1,2 +1,4 @@
 i = 1
 list=["a","b","c"]
+
+assign a index 1 from list
