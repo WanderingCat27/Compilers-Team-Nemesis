@@ -1,5 +1,8 @@
-i=0
-repeat 10 {
-    i = i plus 1
-    print i
-}
+x = [1,2,3]
+print x
+i = 1
+print "Enter number to replace 3 with"
+input number y
+remove index 3 from x
+print x
+add y to x
