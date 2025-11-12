@@ -19,6 +19,7 @@ System.out.println(list);
 System.out.println("removing index 2");
 list.remove(1);
 System.out.println(list);
+System.out.println("\n");
 System.out.println("Clearing list");
 list.clear();
 System.out.println(list);

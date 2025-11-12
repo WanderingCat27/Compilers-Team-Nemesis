@@ -813,7 +813,6 @@ printType
           $code = "System.out.println("+String.valueOf($expr.value)+");";
 		};
 
-//output: 'print' varExprOrType;
 output:
 	'print' printType {
 		  addCodeLine($printType.code);
