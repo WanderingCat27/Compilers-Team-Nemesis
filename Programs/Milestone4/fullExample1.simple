@@ -1,0 +1,16 @@
+x = 0
+print "input number x: "
+input number x
+
+y = [1,2,3,4,5,6,7,8,9,10]
+
+is x less than 10{
+    print "x is less than 10"
+    
+    print y
+
+    assign a index x from y
+    print a
+    remove index x from y
+    print y
+}

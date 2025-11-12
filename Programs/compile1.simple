@@ -9,3 +9,7 @@ print list
 assign a index 1 from list
 print "index 1 of list: "
 print a
+
+print "adding '1' to list"
+add "1" to list
+print list

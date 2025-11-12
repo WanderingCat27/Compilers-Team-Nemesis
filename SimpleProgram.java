@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import java.util.*;
 public class SimpleProgram {
 static Scanner in = new Scanner(System.in);
@@ -17,3 +18,5 @@ list.clear();
 System.out.println(list);
 }
 }
+=======
+>>>>>>> b62e8459ed66be628c6d27d22cac6f7b53fcfbf1
