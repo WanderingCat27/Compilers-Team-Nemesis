@@ -446,10 +446,17 @@ append_to_array:
 	'add ' v = varExprOrType ' to ' n = VARIABLE_NAME {
   addCodeLine($n.getText() + ".add(" + $v.asText + ");");
 };
-remove_from_array:
-	'remove index ' i = INT ' from ' n = VARIABLE_NAME {
-	int index = Integer.parseInt($i.getText()) - 1;
-  addCodeLine($n.getText() + ".remove(" + index + ");");
+remove_from_array
+	locals[String index_code]:
+	'remove index ' (
+		i = INT {
+		      $index_code = "" + (Integer.parseInt($i.getText()) - 1);
+	  }
+		| i_v = VARIABLE_NAME {
+	      $index_code = $i_v.getText();
+    }
+	) ' from ' n = VARIABLE_NAME {
+	  addCodeLine($n.getText() + ".remove(" + $index_code + ");");
 };
 
 get_from_array:
