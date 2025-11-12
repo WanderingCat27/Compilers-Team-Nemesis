@@ -11,6 +11,7 @@ grammar Simple;
     static String DOUBLE = "double";
     static String ARRAY= "array";
     static String BOOL = "boolean";
+    static String FUNCTION_CALL = "function call";
     static String UNKNOWN = "unknown";
   }
 
@@ -284,18 +285,6 @@ assignment
       $typeOf=Types.ARRAY;
       $value="[]";
     }
-		| f = functionCall {
-      if(!$f.isSuccess) {
-        $isError = true;
-      } else if(!$f.doesReturn){
-        $isError = true;
-        error($name, "Error: attempting to assigning the return of a function when function does not return");
-      }
-      else {
-        $typeOf = Types.UNKNOWN;
-        $value = "<FUNCTION CALL>";
-      }
-    }
 		| v = VARIABLE_NAME {
 	      Identifier var = getVariable($v.getText());
       if(var == null) {
@@ -429,6 +418,7 @@ statement:
 	| clear_array
 	| get_from_array
 	| replace_index_array
+	| functionCall
 	| assignment
 	| for_statement
 	| while_statement
@@ -436,7 +426,6 @@ statement:
 	| expr
 	| if_else
 	| condition
-	| functionCall
 	| output;
 
 clear_array:
@@ -742,14 +731,21 @@ functionDefinition
 };
 
 functionCall
-	returns[String name, boolean doesReturn, boolean isSuccess]
-	locals[int arity]:
-	n = VARIABLE_NAME '(' (
-		varExprOrType {
+	returns[String name, boolean doesReturn, boolean isSuccess, ArrayList<String> params, String code]
+	locals[int arity, boolean isAssignment]:
+	(
+		variable = VARIABLE_NAME '=' {
+    $isAssignment = true;
+  }
+	)? n = VARIABLE_NAME '(' (
+		v = varExprOrType {
+    $params = new ArrayList<String>();
+    $params.add($v.asText);
     $arity +=1;
   } (
-			',' varExprOrType {
-	   $arity +=1;
+			',' v = varExprOrType {
+     $params.add($v.asText);
+     $arity +=1;
   }
 		)*
 	)? ')' {
@@ -764,6 +760,27 @@ functionCall
         $doesReturn = fid.doesReturn;
         $isSuccess = true;
       }
+
+      String paramString ="";
+	    if($arity >= 1) {
+	        paramString = $params.get(0);
+          for(int i = 1; i<$arity; i++){
+            paramString += "," + $params.get(i);
+          }
+      }
+      $code = $n.getText() + "(" +paramString + ");";
+        if($isAssignment) {
+	        Identifier ID = getVariable($variable.getText());
+            if(ID == null) {
+              ID = createVariable($variable.getText(), $code, Types.FUNCTION_CALL);
+              // TODO assign the variable type to the return value of function
+              $code = "Object " + ID.id + "=" + $code;
+            } else {     
+              // TODO with return type check if is the same type as function return
+              $code = ID.id + "=" + $code;
+        }
+      }
+        addCodeLine($code);
     }
   };
 
