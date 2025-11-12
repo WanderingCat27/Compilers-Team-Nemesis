@@ -1,0 +1,5 @@
+i=0
+repeat 10 {
+    i = i plus 1
+    print i
+}
