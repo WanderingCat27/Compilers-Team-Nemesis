@@ -1,4 +1,11 @@
-i = 1
+i= 1
 list=["a","b","c"]
+print list
 
+d="d"
+print "replace index 1 with 'd'"
+replace index i with d from list
+print list
 assign a index 1 from list
+print "index 1 of list: "
+print a

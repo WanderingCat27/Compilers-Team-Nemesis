@@ -428,6 +428,7 @@ statement:
 	| remove_from_array
 	| clear_array
 	| get_from_array
+	| replace_index_array
 	| assignment
 	| for_statement
 	| while_statement
@@ -445,6 +446,19 @@ clear_array:
 append_to_array:
 	'add ' v = varExprOrType ' to ' n = VARIABLE_NAME {
   addCodeLine($n.getText() + ".add(" + $v.asText + ");");
+};
+
+replace_index_array
+	locals[String index_code]:
+	'replace index ' (
+		i = INT {
+		      $index_code = "" + (Integer.parseInt($i.getText()) - 1);
+	  }
+		| i_v = VARIABLE_NAME {
+	      $index_code = $i_v.getText() + "-1";
+    }
+	) ' with ' v = VARIABLE_NAME ' from ' l = VARIABLE_NAME {
+	  addCodeLine($l.getText() + ".set(" + $index_code + ", " + $v.getText() + ");");
 };
 remove_from_array
 	locals[String index_code]:
