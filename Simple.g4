@@ -6,7 +6,7 @@ grammar Simple;
   boolean isDebug = true;
 
   class Types {
-    static String STRING = "string";
+    static String STRING = "String";
     static String INT = "int";
     static String DOUBLE = "double";
     static String ARRAY= "array";
@@ -19,6 +19,7 @@ grammar Simple;
     String id;
     String value;  // The value of this identifier
     String type = Types.UNKNOWN;
+    String arrayType;
     boolean hasKnown; // Is the value known or not
     boolean hasBeenUsed;  // Has the id been used yet
     String scope; // function/global scope
@@ -339,8 +340,10 @@ assignment
                   } else if($typeOf.equals(Types.STRING)) {
                     assignmentString = "String ";
 	                  } else if($typeOf.equals(Types.ARRAY)) {
-                    assignmentString = "ArrayList<" + $a.javaType +"> ";
-                      assignmentString += newID.id + "= new ArrayList<" + $a.javaType + ">();";
+                      assignmentString = "ArrayList<" + $a.javaType +"> ";
+	                    newID.arrayType = $a.typeOf;
+	                    System.out.println("Array type: " +  newID.arrayType);
+                    assignmentString += newID.id + "= new ArrayList<" + $a.javaType + ">();";
                   addCodeLine(assignmentString);
 		              String appendString = "Collections.addAll("+newID.id+", new "+ $a.javaType +"[]{";
                   // add values
@@ -367,7 +370,6 @@ assignment
 	                error($name,"Cannot reassign arrays");
                 }
               newID.value = $value;
-              // newID.type = $typeOf; –– cannot change type after the fact
               addCodeLine(newID.id + "=" + $value + ";");
 
           }
@@ -426,6 +428,7 @@ statement:
 	| assignment
 	| remove_from_array
 	| clear_array
+	| get_from_array
 	| for_statement
 	| while_statement
 	| input
@@ -443,10 +446,46 @@ append_to_array:
 	'add ' v = varExprOrType ' to ' n = VARIABLE_NAME {
   addCodeLine($n.getText() + ".add(" + $v.asText + ");");
 };
-remove_from_array:
-	'remove index ' i = INT ' from ' n = VARIABLE_NAME {
-	int index = Integer.parseInt($i.getText()) - 1;
-  addCodeLine($n.getText() + ".remove(" + index + ");");
+remove_from_array
+	locals[String index_code]:
+	'remove index ' (
+		i = INT {
+		      $index_code = "" + (Integer.parseInt($i.getText()) - 1);
+	  }
+		| i_v = VARIABLE_NAME {
+	      $index_code = $i_v.getText() + "-1";
+    }
+	) ' from ' n = VARIABLE_NAME {
+	  addCodeLine($n.getText() + ".remove(" + $index_code + ");");
+};
+
+get_from_array
+	locals[String index_code]:
+	v = VARIABLE_NAME '= get index ' (
+		i = INT {
+		      $index_code = "" + (Integer.parseInt($i.getText()) - 1);
+	  }
+		| i_v = VARIABLE_NAME {
+	      $index_code = $i_v.getText() + "-1";
+    }
+	) ' from ' n = VARIABLE_NAME {
+  Identifier arrayID = getVariable($n.getText());
+  Identifier newID = getVariable($v.getText());
+    if(arrayID == null)  {
+	      error($n, "array does not exist");
+    } else {
+      if(newID == null) {
+          newID = createVariable($v.getText(), "", arrayID.arrayType);
+        } 
+
+      if(!arrayID.arrayType.equals(newID.type)) {
+        error($n, "type of array does not match type of variable");
+      }  else {
+        String type = newID.type;
+
+        addCodeLine(type + " " + $v.getText() + "="+$n.getText() + ".get(" + $index_code + ");");
+      }
+    }
 };
 expr
 	returns[boolean hasKnownValue, float value, String exprString, String typeOf]:

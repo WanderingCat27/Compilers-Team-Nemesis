@@ -1,2 +1,2 @@
-x = true
-print x
+i = 1
+list=["a","b","c"]
