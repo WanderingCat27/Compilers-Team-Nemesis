@@ -1,15 +1,11 @@
-i= 1
-list=["a","b","c"]
-print list
+define callReturn(x,y) {
+    return x
+}
 
-d="d"
-print "replace index 1 with 'd'"
-replace index i with d from list
-print list
-assign a index 1 from list
-print "index 1 of list: "
-print a
+x=callReturn(2,4)
 
-print "adding '1' to list"
-add "1" to list
-print list
+y=3
+
+y=callReturn(4,5)
+
+callReturn(10,11)

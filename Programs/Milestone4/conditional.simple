@@ -17,4 +17,7 @@ print x
 
 t=true
 
-is t equal
+
+is t not equal to false {
+    print("not equal to false")
+}
