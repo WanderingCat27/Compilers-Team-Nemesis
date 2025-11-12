@@ -4,7 +4,7 @@ list=[1,2,3,4,5]
 * append 5 to list
 add 5 to list
 
-index_one = get index 1 from list
+assign index_one index 1 from list
 print "index 1: "
 print index_one
 

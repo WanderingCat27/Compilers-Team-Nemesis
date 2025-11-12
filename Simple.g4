@@ -425,10 +425,10 @@ array
 
 statement:
 	append_to_array
-	| assignment
 	| remove_from_array
 	| clear_array
 	| get_from_array
+	| assignment
 	| for_statement
 	| while_statement
 	| input
@@ -461,7 +461,7 @@ remove_from_array
 
 get_from_array
 	locals[String index_code]:
-	v = VARIABLE_NAME '= get index ' (
+	'assign ' v = VARIABLE_NAME ' index ' (
 		i = INT {
 		      $index_code = "" + (Integer.parseInt($i.getText()) - 1);
 	  }
