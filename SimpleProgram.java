@@ -13,6 +13,14 @@ System.out.println(list);
 String a=list.get(0);
 System.out.println("index 1 of list: ");
 System.out.println(a);
+System.out.println("adding '1' to list");
+list.add("1");
+System.out.println(list);
+System.out.println("removing index 2");
+list.remove(1);
+System.out.println(list);
+System.out.println("Clearing list");
+list.clear();
 System.out.println(list);
 }
 }
