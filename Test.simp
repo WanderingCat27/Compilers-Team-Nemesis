@@ -1,8 +1,14 @@
+
+define int t() {
+    return 4 plus 5
+}
 define int x (int y, int z) {
-    return y plus z
+    return t()
 }
 define void b() {
     print 4
 }
 print "hi"
-y = "hi"
+y = 5
+z = x(5, 4)
+print x(5, 3)

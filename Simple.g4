@@ -32,6 +32,7 @@ grammar Simple;
     int arity;
     ArrayList<Identifier> Params;
     boolean doesReturn;
+    String returnType;
     ArrayList<String> code = new ArrayList<String>();
 
     void addLine(String line) {
@@ -55,11 +56,12 @@ grammar Simple;
   }
 
 
-  FunctionIdentifier createFunction(String name, int arity, boolean doesReturn) {
+  FunctionIdentifier createFunction(String name, int arity, boolean doesReturn, String returnType) {
     FunctionIdentifier fid = new FunctionIdentifier();
     fid.name = name;
     fid.arity = arity;
     fid.doesReturn = doesReturn;
+    fid.returnType = returnType;
     functionTable.put(name, fid);
     if(isDebug)
       System.out.println("Created func: name: " + name + " | arity: " + arity + " | doesReturn: " + doesReturn);
@@ -756,7 +758,7 @@ functionDefinition
         $doesReturn = false;
       }
       $arity = $variableParamNames.size();
-      createFunction($name, $arity, $doesReturn);
+      createFunction($name, $arity, $doesReturn, $returnType);
       if ($arity > 0) {
         addCodeLine("public static " + $returnType + " " + $name + "(" + $s + ") {"); // }
       } else {
@@ -769,7 +771,7 @@ functionDefinition
 		| ('define') {
       error($n, "Error can't define function in a function");
     }
-		| ('return' y = varExprOrType | expr) { //will most likely need to edit this for recursion
+		| ('return' y = varExprOrType  | expr ) { //will most likely need to edit this for recursion
       String b = $y.asText;
       if($doesReturn) {
         addCodeLine("return " + $y.asText + ";");
@@ -786,8 +788,8 @@ functionDefinition
 };
 
 functionCall
-	returns[String name, boolean doesReturn, boolean isSuccess, ArrayList<String> params, String code]
-	locals[int arity, boolean isAssignment]:
+	returns[String name, boolean doesReturn, boolean isSuccess, ArrayList<String> params, String code, String value, String asText]
+	locals[int arity, boolean isAssignment, String funType]:
 	(
 		variable = VARIABLE_NAME '=' {
     $isAssignment = true;
@@ -809,6 +811,7 @@ functionCall
       error($n, "Error: attempting to call a function that does not exist");
     } else {
       FunctionIdentifier fid = getFunction($name);
+      $funType = fid.returnType;
       if(fid.arity != $arity) {
         error($n, "attempting to call a function with incorrect number of arguments");
       } else {
@@ -824,12 +827,14 @@ functionCall
           }
       }
       $code = $n.getText() + "(" +paramString + ");";
+      $value = $n.getText() + "(" +paramString + ")";
+      $asText = $n.getText() + "(" +paramString + ")";
         if($isAssignment) {
 	        Identifier ID = getVariable($variable.getText());
             if(ID == null) {
-              ID = createVariable($variable.getText(), $code, Types.FUNCTION_CALL);
+              ID = createVariable($variable.getText(), $code, $funType);
               // TODO assign the variable type to the return value of function
-              $code = "Object " + ID.id + "=" + $code;
+              $code = $funType + " " + ID.id + "=" + $code;
             } else {     
               // TODO with return type check if is the same type as function return
               $code = ID.id + "=" + $code;
@@ -869,6 +874,11 @@ printType
 	| STRING {$hasKnownValue = true; 
   $value = $STRING.getText();
 		  $code = "System.out.println("+$value+");";
+    }
+  | functionCall {
+      $hasKnownValue = true;
+      $value = String.valueOf($functionCall.value);
+      $code = "System.out.println();";
     }
 	| VARIABLE_NAME {
         String id = $VARIABLE_NAME.getText();
@@ -913,7 +923,11 @@ varExprOrType
   }
 	| e = expr {
 	    $asText = $e.exprString;
-  };
+  }
+  | f = functionCall {
+      $asText = $f.value;
+  }
+  ;
 type: INT | STRING | DECIMAL | BOOL;
 
 STRING: '"' ( ~["])* '"';
