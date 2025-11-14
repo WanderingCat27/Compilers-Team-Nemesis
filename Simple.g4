@@ -87,7 +87,7 @@ grammar Simple;
       }
   }
 
-
+  int isFunctionReturning = 0;
 
 	ScopedSymbolTable scopedSymbolTable = new ScopedSymbolTable();
   int scopeLevel = 0;
@@ -441,7 +441,19 @@ statement:
 	| if_else
 	| condition
 	| output
-  ;
+	// needed to move because returns need to be allowed in loops and ifs within functions
+	| (at = 'return' y = varExprOrType | expr) { //will most likely need to edit this for recursion
+    if(isScopeGlobal()) {
+      error($at, "error attempting to call return outside a function");
+      } {
+        String b = $y.asText;
+        if(isFunctionReturning == 1) {
+          addCodeLine("return " + $y.asText + ";");
+        } else {
+          error($at, "Error: function does not return a value");
+        }
+        }
+  };
 
 clear_array:
 	'clear ' n = VARIABLE_NAME {
@@ -506,19 +518,17 @@ get_from_array
     }
 };
 square_root
-  returns[float value, String exprString, boolean hasKnownValue]:
-  'square root' c = VARIABLE_NAME {
+	returns[float value, String exprString, boolean hasKnownValue]:
+	'square root' c = VARIABLE_NAME {
     Identifier var = getVariable($c.getText());
     $exprString = "Math.sqrt(" + var.id + ")";
     $hasKnownValue = false;
   }
-  |'square root' e = expr {
+	| 'square root' e = expr {
       $value = $e.value;
       $exprString = "Math.sqrt(" + String.valueOf($e.value) + ")";   
       $hasKnownValue = $e.hasKnownValue;
-    }
-
-    ;
+    };
 expr
 	returns[boolean hasKnownValue, float value, String exprString, String typeOf]:
 	a = word {
@@ -617,7 +627,7 @@ factor
         }
         $hasKnownValue = false;
       }
-  | square_root {
+	| square_root {
         $factorString = $square_root.exprString;
         $isDouble = true;
         $hasKnownValue = true;
@@ -670,7 +680,8 @@ if($c.isNot) $conditional = "!(" + $conditional;
 } b = varExprOrType {
 		$conditional+=$b.asText;
     if($c.isNot) $conditional +=")";
-    System.out.println($conditional);
+    if(isDebug)
+      System.out.println($conditional);
 };
 
 if_statement
@@ -783,8 +794,10 @@ functionDefinition
       }
       if(!$returnType.equals("void")) {
         $doesReturn = true;
+        isFunctionReturning = 1;
       } else {
         $doesReturn = false;
+	        isFunctionReturning = 0;
       }
       $arity = $variableParamNames.size();
       createFunction($name, $arity, $doesReturn, $returnType);
@@ -799,20 +812,22 @@ functionDefinition
 		statement
 		| ('define') {
       error($n, "Error can't define function in a function");
-    }
-		| ('return' y = varExprOrType  | expr ) { //will most likely need to edit this for recursion
+    } <<<<<<< Updated upstream
+		| ('return' y = varExprOrType | expr) { //will most likely need to edit this for recursion
       String b = $y.asText;
       if($doesReturn) {
         addCodeLine("return " + $y.asText + ";");
       } else {
         error($n, "Error: function " + $name + " does not return a value");
       }
-      }
+      } = = = = = = =>>>>>>> Stashed changes
 	)* '}' {
 	  //$arity = $variableParamNames.size();
     //createFunction($name, $arity, $doesReturn);
     functionList.add(getFunction($name));
+    //{
     addCodeLine("}");
+    isFunctionReturning = -1;
     exitMainScope();
 };
 
@@ -904,7 +919,7 @@ printType
   $value = $STRING.getText();
 		  $code = "System.out.println("+$value+");";
     }
-  | functionCall {
+	| functionCall {
       $hasKnownValue = true;
       $value = String.valueOf($functionCall.value);
       $code = "System.out.println();";
@@ -953,10 +968,9 @@ varExprOrType
 	| e = expr {
 	    $asText = $e.exprString;
   }
-  | f = functionCall {
+	| f = functionCall {
       $asText = $f.value;
-  }
-  ;
+  };
 type: INT | STRING | DECIMAL | BOOL;
 
 STRING: '"' ( ~["])* '"';
