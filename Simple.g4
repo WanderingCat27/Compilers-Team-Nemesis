@@ -812,15 +812,7 @@ functionDefinition
 		statement
 		| ('define') {
       error($n, "Error can't define function in a function");
-    } <<<<<<< Updated upstream
-		| ('return' y = varExprOrType | expr) { //will most likely need to edit this for recursion
-      String b = $y.asText;
-      if($doesReturn) {
-        addCodeLine("return " + $y.asText + ";");
-      } else {
-        error($n, "Error: function " + $name + " does not return a value");
-      }
-      } = = = = = = =>>>>>>> Stashed changes
+    }
 	)* '}' {
 	  //$arity = $variableParamNames.size();
     //createFunction($name, $arity, $doesReturn);
