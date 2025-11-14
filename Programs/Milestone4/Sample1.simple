@@ -1,0 +1,6 @@
+PI = 3.141592653589793
+print PI
+
+name = "hi"
+input string name
+print "hello" plus name
