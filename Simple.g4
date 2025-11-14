@@ -703,28 +703,25 @@ loopScope:
 
 functionDefinition
 	returns[String name, int arity, boolean doesReturn, String returnType, String value]
-	locals[ArrayList<String> variableParamNames, ArrayList<String> varTypeAndName, String varType, String s]:
+	locals[ArrayList<String> variableParamNames, ArrayList<String> varTypeAndName, String varType, String s]
+		:
 	'define' r = VARIABLE_NAME {
     $returnType = $r.getText();
-  }
-  n = VARIABLE_NAME {
+  } n = VARIABLE_NAME {
     $name = $n.getText();
 	  $variableParamNames = new ArrayList<String>();
     $varTypeAndName = new ArrayList<String>();
     $varType = "";
   } '(' (
-    VARIABLE_NAME {
-      $varType = $VARIABLE_NAME.getText();
-    }
 		VARIABLE_NAME {
+      $varType = $VARIABLE_NAME.getText();
+    } VARIABLE_NAME {
 		      $variableParamNames.add($VARIABLE_NAME.getText());
           $varTypeAndName.add($varType + " " + $VARIABLE_NAME.getText());
     } (
-			',' 
-      VARIABLE_NAME {
+			',' VARIABLE_NAME {
         $varType = $VARIABLE_NAME.getText();
-      }
-      VARIABLE_NAME {
+      } VARIABLE_NAME {
 	        $variableParamNames.add($VARIABLE_NAME.getText());
           $varTypeAndName.add($varType + " " + $VARIABLE_NAME.getText());
         $s = "";
@@ -736,7 +733,6 @@ functionDefinition
           }
         }
       }
-      
 		)*
 	)? ')' '{' { 
     if(doesFunctionExist($name)) {
@@ -764,7 +760,7 @@ functionDefinition
       } 
     }
     
-} ( 
+} (
 		statement
 		| ('define') {
       error($n, "Error can't define function in a function");
@@ -858,18 +854,22 @@ input_decimal:
 printType
 	returns[Boolean hasKnownValue, String value, String code]:
 	INT {
-    $hasKnownValue = true; $value = $INT.getText();
+    $hasKnownValue = true; 
+    $value = $INT.getText();
 	  $code = "System.out.println(" + $value + ");";
   }
-	| DECIMAL {$hasKnownValue = true; $value = $DECIMAL.getText();
+	| DECIMAL {$hasKnownValue = true; 
+  $value = $DECIMAL.getText();
 		  $code = "System.out.println(" + $value + ");";
   }
-	| STRING {$hasKnownValue = true; $value = $STRING.getText();
+	| STRING {$hasKnownValue = true; 
+  $value = $STRING.getText();
 		  $code = "System.out.println("+$value+");";
     }
 	| VARIABLE_NAME {
         String id = $VARIABLE_NAME.getText();
         used.add(id);
+	      $value=id;
         // If we're in the middle of first assignment to VARIABLE_NAME (self-reference):
         if (!doesVariableExist(id)) {
           // General use-before-assign.
@@ -885,9 +885,21 @@ printType
           $code = "System.out.println("+String.valueOf($expr.value)+");";
 		};
 
-output:
-	'print' printType {
-		  addCodeLine($printType.code);
+output
+	locals[ArrayList<String> printValues]:
+	'print' {
+    $printValues = new ArrayList<String>();
+  } (
+		v = printType {
+	    $printValues.add($v.value);
+  }
+	)+ {
+      for (String s : $printValues) {
+        addCodeLine("System.out.print("+s+");");
+      }
+      addCodeLine("System.out.println();");
+      
+
   };
 
 varExprOrType

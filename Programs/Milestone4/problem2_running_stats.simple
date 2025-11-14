@@ -23,10 +23,12 @@ is firstVal greater than 0.0 {
 }
 
 i = 1
+
 while i less than n {
     x = 0.0
     print "input x: "
     input decimal x
+    print x
 
     total = total plus x
 
@@ -48,9 +50,10 @@ while i less than n {
     i = i plus 1
 }
 
-print("sum =", total)
-print("min =", mn)
-print("max =", mx)
-print("pos =", pos)
-print("neg =", neg)
-print("zero =", zero)
+print "sum = " total
+
+print "min = " mn
+print "max = " mx
+print "pos = " pos
+print "neg = " neg
+print "zero = " zero
