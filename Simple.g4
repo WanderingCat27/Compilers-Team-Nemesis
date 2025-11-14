@@ -758,8 +758,8 @@ functionDefinition
       $arity = $variableParamNames.size();
       createFunction($name, $arity, $doesReturn);
       if ($arity > 0) {
-      addCodeLine("public static " + $returnType + " " + $name + "(" + $s + ") {"); // }
-    } else {
+        addCodeLine("public static " + $returnType + " " + $name + "(" + $s + ") {"); // }
+      } else {
         addCodeLine("public static " + $returnType + " " + $name + "() {"); // }
       } 
     }
