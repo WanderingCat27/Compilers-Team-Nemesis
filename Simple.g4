@@ -757,7 +757,11 @@ functionDefinition
       }
       $arity = $variableParamNames.size();
       createFunction($name, $arity, $doesReturn);
+      if ($arity > 0) {
       addCodeLine("public " + $returnType + " " + $name + "(" + $s + ") {"); // }
+    } else {
+        addCodeLine("public " + $returnType + " " + $name + "() {"); // }
+      } 
     }
     
 } ( 

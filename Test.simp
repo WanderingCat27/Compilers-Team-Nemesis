@@ -1,5 +1,8 @@
 define int x (int y, int z) {
     return y plus z
 }
+define void b() {
+    print 4
+}
 print "hi"
 y = "hi"
