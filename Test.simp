@@ -1,9 +1,14 @@
-print 20
-x = 5.0
-repeat 5 {
-    print 1
+
+define int t() {
+    return 4 plus 5
 }
-while x greater than 0 {
-    print "hi"
-    x = x minus 1
+define int x (int y, int z) {
+    return t()
 }
+define void b() {
+    print 4
+}
+print "hi"
+y = 5
+z = x(5, 4)
+l = square root y

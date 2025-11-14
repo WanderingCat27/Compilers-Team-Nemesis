@@ -32,6 +32,7 @@ grammar Simple;
     int arity;
     ArrayList<Identifier> Params;
     boolean doesReturn;
+    String returnType;
     ArrayList<String> code = new ArrayList<String>();
 
     void addLine(String line) {
@@ -49,17 +50,18 @@ grammar Simple;
 
   ArrayList<String> globalCodeLines = new ArrayList<String>();
   Map<String, FunctionIdentifier> functionTable = new HashMap();
-
+  ArrayList<FunctionIdentifier> functionList = new ArrayList<FunctionIdentifier>();
   FunctionIdentifier getFunction(String name) {
     return functionTable.get(name);
   }
 
 
-  FunctionIdentifier createFunction(String name, int arity, boolean doesReturn) {
+  FunctionIdentifier createFunction(String name, int arity, boolean doesReturn, String returnType) {
     FunctionIdentifier fid = new FunctionIdentifier();
     fid.name = name;
     fid.arity = arity;
     fid.doesReturn = doesReturn;
+    fid.returnType = returnType;
     functionTable.put(name, fid);
     if(isDebug)
       System.out.println("Created func: name: " + name + " | arity: " + arity + " | doesReturn: " + doesReturn);
@@ -85,7 +87,7 @@ grammar Simple;
       }
   }
 
-
+  int isFunctionReturning = 0;
 
 	ScopedSymbolTable scopedSymbolTable = new ScopedSymbolTable();
   int scopeLevel = 0;
@@ -211,7 +213,8 @@ grammar Simple;
       return numErrors;
   }
   //Code generation
-  StringBuilder sb = new StringBuilder(); 
+  StringBuilder sb = new StringBuilder();
+  StringBuilder sb2 = new StringBuilder();
   
   
   void emit(String s) {sb.append(s);}   
@@ -219,16 +222,23 @@ grammar Simple;
   void openProgram() {
     emit("import java.util.*;\n");
     emit("public class SimpleProgram {\n");
-    emit("static Scanner in = new Scanner(System.in);\n");
-    emit("  public static void main(String[] args) throws Exception {\n");
+    emit("static Scanner ___protected___in___ = new Scanner(System.in);\n");
   }
 
   void writeFile() {
     try (PrintWriter pw = new PrintWriter("SimpleProgram.java", "UTF-8")) {
-      for(String line : globalCodeLines) {
+      for(int i=0; i<functionList.size(); i++) {
+        FunctionIdentifier fid = functionList.get(i);
+        for(String line : fid.code) {
           sb.append(line + "\n");
-      } 
+        }
+      }
       pw.print(sb.toString());
+      pw.print("public static void main(String[] args) throws Exception {\n");
+      for(String line : globalCodeLines) {
+          sb2.append(line + "\n");
+      } 
+      pw.print(sb2.toString());
       pw.print("}\n}\n");
     } catch (Exception e) {
       System.err.println("error: failed to write SimpleProgram.java: " + e.getMessage());
@@ -331,7 +341,8 @@ assignment
 	                  } else if($typeOf.equals(Types.ARRAY)) {
                       assignmentString = "ArrayList<" + $a.javaType +"> ";
 	                    newID.arrayType = $a.typeOf;
-	                    System.out.println("Array type: " +  newID.arrayType);
+                      if(isDebug)
+                        System.out.println("Array type: " +  newID.arrayType);
                     assignmentString += newID.id + "= new ArrayList<" + $a.javaType + ">();";
                   addCodeLine(assignmentString);
 		              String appendString = "Collections.addAll("+newID.id+", new "+ $a.javaType +"[]{";
@@ -342,8 +353,9 @@ assignment
                       isFirst=false;
                       appendString += v;
                       continue;
-                    }
+                    } else {
 	                    appendString += "," + v;
+                    }
                   }
                   appendString+="});";
                   addCodeLine(appendString);
@@ -374,15 +386,15 @@ array
     $values=new ArrayList<String>();
   } (
 		(
-			(
-				v = INT {
+			v = INT {
     $typeOf = Types.INT;
 	  $javaType = "Integer";
     $values.add($v.getText());
-  } ','
-			)*? v = INT {
+  } (
+				',' v = INT {
 	    $values.add($v.getText());
   }
+			)*
 		)
 		| (
 			(
@@ -390,21 +402,23 @@ array
     $typeOf = Types.DOUBLE;
     $javaType = "Double";
     $values.add($v.getText());
-  } ','
-			)*? v = DECIMAL {
+  }
+			) (
+				',' v = DECIMAL {
 	    $values.add($v.getText());
   }
+			)*
 		)
 		| (
-			(
-				v = STRING {
+			v = STRING {
     $typeOf = Types.STRING;
     $javaType = "String";
     $values.add($v.getText());
-	  } ','
-			)*? v = STRING {
-	    $values.add($v.getText());
+	  } (
+				',' v = STRING {
+    $values.add($v.getText());
   }
+			)*
 		)
 	) ']' {
 	    if(isDebug){
@@ -426,7 +440,20 @@ statement:
 	| expr
 	| if_else
 	| condition
-	| output;
+	| output
+	// needed to move because returns need to be allowed in loops and ifs within functions
+	| (at = 'return' y = varExprOrType | expr) { //will most likely need to edit this for recursion
+    if(isScopeGlobal()) {
+      error($at, "error attempting to call return outside a function");
+      } {
+        String b = $y.asText;
+        if(isFunctionReturning == 1) {
+          addCodeLine("return " + $y.asText + ";");
+        } else {
+          error($at, "Error: function does not return a value");
+        }
+        }
+  };
 
 clear_array:
 	'clear ' n = VARIABLE_NAME {
@@ -490,6 +517,18 @@ get_from_array
       }
     }
 };
+square_root
+	returns[float value, String exprString, boolean hasKnownValue]:
+	'square root' c = VARIABLE_NAME {
+    Identifier var = getVariable($c.getText());
+    $exprString = "Math.sqrt(" + var.id + ")";
+    $hasKnownValue = false;
+  }
+	| 'square root' e = expr {
+      $value = $e.value;
+      $exprString = "Math.sqrt(" + String.valueOf($e.value) + ")";   
+      $hasKnownValue = $e.hasKnownValue;
+    };
 expr
 	returns[boolean hasKnownValue, float value, String exprString, String typeOf]:
 	a = word {
@@ -511,7 +550,7 @@ expr
           if ($hasKnownValue && $b.hasKnownValue)
             $value = $value + $b.value;
         } else {
-	        $exprString += " - " + $b.value;
+		        $exprString += " - " + $b.exprString;
           if ($hasKnownValue && $b.hasKnownValue)
             $value = $value - $b.value;
         }
@@ -581,10 +620,20 @@ factor
           if(t.equals(Types.DOUBLE)) {
             $isDouble = true;
 	          } else if(!t.equals(Types.INT)) {
-	            error($VARIABLE_NAME, id + " is not an int or double");
+              if (getScope().equals("Global")) {  
+	              error($VARIABLE_NAME, id + " is not an int or double");
+              }
           }
         }
         $hasKnownValue = false;
+      }
+	| square_root {
+        $factorString = $square_root.exprString;
+        $isDouble = true;
+        $hasKnownValue = true;
+        if ( $square_root.hasKnownValue ) {
+          $value = $square_root.value;
+        }
       }
 	| '(' expr ')' { 
 		    $factorString = '('+ $expr.exprString +')';
@@ -631,7 +680,8 @@ if($c.isNot) $conditional = "!(" + $conditional;
 } b = varExprOrType {
 		$conditional+=$b.asText;
     if($c.isNot) $conditional +=")";
-    System.out.println($conditional);
+    if(isDebug)
+      System.out.println($conditional);
 };
 
 if_statement
@@ -661,8 +711,8 @@ if_else:
 
 for_statement
 	returns[String repeats]:
-	'repeat' INT {
-   $repeats = $INT.getText();
+	'repeat' (n = INT | n = VARIABLE_NAME) {
+   $repeats = $n.getText();
 
    String i_name = "____protected_index____" + getScopeLevel();
 	 addCodeLine("for (int " +i_name +" = 0; " +i_name +" < " + $repeats + "; " +i_name +"++)" + " {"); // } 
@@ -692,47 +742,90 @@ loopScope:
     };
 
 functionDefinition
-	returns[String name, int arity, boolean doesReturn]
-	locals[ArrayList<String> variableParamNames]:
-	'define' n = VARIABLE_NAME {
+	returns[String name, int arity, boolean doesReturn, String returnType, String value]
+	locals[ArrayList<String> variableParamNames, ArrayList<String> varTypeAndName, String varType, String s]
+		:
+	'define' r = VARIABLE_NAME {
+    $returnType = $r.getText();
+  } n = VARIABLE_NAME {
     $name = $n.getText();
-	    $variableParamNames = new ArrayList<String>();
+	  $variableParamNames = new ArrayList<String>();
+    $varTypeAndName = new ArrayList<String>();
   } '(' (
 		VARIABLE_NAME {
+      $varType = $VARIABLE_NAME.getText();
+    } VARIABLE_NAME {
 		      $variableParamNames.add($VARIABLE_NAME.getText());
+          $varTypeAndName.add($varType + " " + $VARIABLE_NAME.getText());
+          for(int i=0; i< $varTypeAndName.size(); i++) {
+          if(i==($varTypeAndName.size()-1)) {
+            $s = $varTypeAndName.get(i);
+          } else {
+            $s += $varTypeAndName.get(i) + ", ";
+          }
+        }
     } (
 			',' VARIABLE_NAME {
+        $varType = $VARIABLE_NAME.getText();
+      } VARIABLE_NAME {
 	        $variableParamNames.add($VARIABLE_NAME.getText());
+          $varTypeAndName.add($varType + " " + $VARIABLE_NAME.getText());
+        $s = "";
+        for(int i=0; i< $varTypeAndName.size(); i++) {
+          if(i==($varTypeAndName.size()-1)) {
+            $s += $varTypeAndName.get(i);
+          } else {
+            $s += $varTypeAndName.get(i) + ", ";
+          }
+        }
       }
 		)*
 	)? ')' '{' { 
     if(doesFunctionExist($name)) {
       error($n, "Error: function " + $name + "already Exists");
     } else {
-	  setMainScope($name);
-			    for(String varName : $variableParamNames) {
-	        createVariable(varName, "<FUNCTION_PARAM>", Types.UNKNOWN);
-          if(isDebug)
-	          System.out.println("Adding " + varName + " to " + $name + " scope");
+      
+	    setMainScope($name);
+			for(String varName : $variableParamNames) {
+	    createVariable(varName, "<FUNCTION_PARAM>", Types.UNKNOWN);
+      if(isDebug) {
+	      System.out.println("Adding " + varName + " to " + $name + " scope");
+      }      
       }
+      if(!$returnType.equals("void")) {
+        $doesReturn = true;
+        isFunctionReturning = 1;
+      } else {
+        $doesReturn = false;
+	        isFunctionReturning = 0;
+      }
+      $arity = $variableParamNames.size();
+      createFunction($name, $arity, $doesReturn, $returnType);
+      if ($arity > 0) {
+        addCodeLine("public static " + $returnType + " " + $name + "(" + $s + ") {"); // }
+      } else {
+        addCodeLine("public static " + $returnType + " " + $name + "() {"); // }
+      } 
     }
+    
 } (
 		statement
 		| ('define') {
       error($n, "Error can't define function in a function");
     }
-		| ('return' varExprOrType | expr) {
-      $doesReturn = true;
-      }
 	)* '}' {
-	    $arity = $variableParamNames.size();
-    createFunction($name, $arity, $doesReturn);
-  exitMainScope();
+	  //$arity = $variableParamNames.size();
+    //createFunction($name, $arity, $doesReturn);
+    functionList.add(getFunction($name));
+    //{
+    addCodeLine("}");
+    isFunctionReturning = -1;
+    exitMainScope();
 };
 
 functionCall
-	returns[String name, boolean doesReturn, boolean isSuccess, ArrayList<String> params, String code]
-	locals[int arity, boolean isAssignment]:
+	returns[String name, boolean doesReturn, boolean isSuccess, ArrayList<String> params, String code, String value, String asText]
+	locals[int arity, boolean isAssignment, String funType]:
 	(
 		variable = VARIABLE_NAME '=' {
     $isAssignment = true;
@@ -754,6 +847,7 @@ functionCall
       error($n, "Error: attempting to call a function that does not exist");
     } else {
       FunctionIdentifier fid = getFunction($name);
+      $funType = fid.returnType;
       if(fid.arity != $arity) {
         error($n, "attempting to call a function with incorrect number of arguments");
       } else {
@@ -769,12 +863,14 @@ functionCall
           }
       }
       $code = $n.getText() + "(" +paramString + ");";
+      $value = $n.getText() + "(" +paramString + ")";
+      $asText = $n.getText() + "(" +paramString + ")";
         if($isAssignment) {
 	        Identifier ID = getVariable($variable.getText());
             if(ID == null) {
-              ID = createVariable($variable.getText(), $code, Types.FUNCTION_CALL);
+              ID = createVariable($variable.getText(), $code, $funType);
               // TODO assign the variable type to the return value of function
-              $code = "Object " + ID.id + "=" + $code;
+              $code = $funType + " " + ID.id + "=" + $code;
             } else {     
               // TODO with return type check if is the same type as function return
               $code = ID.id + "=" + $code;
@@ -788,33 +884,42 @@ input: input_decimal | input_string | input_number;
 
 input_string:
 	'input string ' a = VARIABLE_NAME {
-    addCodeLine($a.getText()+"=in.nextLine();");
+	    addCodeLine($a.getText()+"=___protected___in___.nextLine();");
 };
 input_number:
 	'input number ' a = VARIABLE_NAME {
-    addCodeLine($a.getText()+"=in.nextInt();");
+	    addCodeLine($a.getText()+"=___protected___in___.nextInt();");
 };
 input_decimal:
 	'input decimal ' a = VARIABLE_NAME {
-    addCodeLine($a.getText()+"=in.nextFloat();");
+	    addCodeLine($a.getText()+"=___protected___in___.nextDouble();");
 
 };
 
 printType
 	returns[Boolean hasKnownValue, String value, String code]:
 	INT {
-    $hasKnownValue = true; $value = $INT.getText();
+    $hasKnownValue = true; 
+    $value = $INT.getText();
 	  $code = "System.out.println(" + $value + ");";
   }
-	| DECIMAL {$hasKnownValue = true; $value = $DECIMAL.getText();
+	| DECIMAL {$hasKnownValue = true; 
+  $value = $DECIMAL.getText();
 		  $code = "System.out.println(" + $value + ");";
   }
-	| STRING {$hasKnownValue = true; $value = $STRING.getText();
+	| STRING {$hasKnownValue = true; 
+  $value = $STRING.getText();
 		  $code = "System.out.println("+$value+");";
+    }
+	| functionCall {
+      $hasKnownValue = true;
+      $value = String.valueOf($functionCall.value);
+      $code = "System.out.println();";
     }
 	| VARIABLE_NAME {
         String id = $VARIABLE_NAME.getText();
         used.add(id);
+	      $value=id;
         // If we're in the middle of first assignment to VARIABLE_NAME (self-reference):
         if (!doesVariableExist(id)) {
           // General use-before-assign.
@@ -830,9 +935,21 @@ printType
           $code = "System.out.println("+String.valueOf($expr.value)+");";
 		};
 
-output:
-	'print' printType {
-		  addCodeLine($printType.code);
+output
+	locals[ArrayList<String> printValues]:
+	'print' {
+    $printValues = new ArrayList<String>();
+  } (
+		v = printType {
+	    $printValues.add($v.value);
+  }
+	)+ {
+      for (String s : $printValues) {
+        addCodeLine("System.out.print("+s+");");
+      }
+      addCodeLine("System.out.println();");
+      
+
   };
 
 varExprOrType
@@ -842,6 +959,9 @@ varExprOrType
   }
 	| e = expr {
 	    $asText = $e.exprString;
+  }
+	| f = functionCall {
+      $asText = $f.value;
   };
 type: INT | STRING | DECIMAL | BOOL;
 

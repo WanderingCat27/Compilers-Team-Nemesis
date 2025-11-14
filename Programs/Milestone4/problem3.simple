@@ -1,0 +1,43 @@
+n = 0
+print "input number floats to read: "
+input number n
+
+listA=[0.0]
+listB=[0.0]
+clear listA
+clear listB
+
+mean=0.0
+
+print "input number floats: "
+repeat n {
+    in=0.0
+    input decimal in
+    add in to listA
+    mean = mean plus in
+}
+
+mean = mean divide n
+
+
+
+i=1
+repeat n {
+    assign value index i from listA
+    value = value minus mean
+    add value to listB
+    i = i plus 1
+}
+
+print "---"
+i=1
+repeat n {
+    assign v index i from listB
+    print v
+    i = i plus 1
+}
+
+print ""
+print "mean: " mean
+print "list A: " listA
+print "list B: " listB
