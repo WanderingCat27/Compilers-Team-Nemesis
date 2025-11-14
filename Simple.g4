@@ -440,7 +440,8 @@ statement:
 	| expr
 	| if_else
 	| condition
-	| output;
+	| output
+  ;
 
 clear_array:
 	'clear ' n = VARIABLE_NAME {
@@ -504,6 +505,16 @@ get_from_array
       }
     }
 };
+square_root
+  returns[float value, String exprString]:
+  'square root' e = expr {
+      if($e.hasKnownValue) {
+        $value = $e.value;
+        $exprString = "" + $value;
+      } else {
+        error($e.start, "cannot compute square root of unknown value");
+      }
+    };
 expr
 	returns[boolean hasKnownValue, float value, String exprString, String typeOf]:
 	a = word {
@@ -600,6 +611,13 @@ factor
               }
           }
         }
+        $hasKnownValue = false;
+      }
+  | square_root {
+        $factorString = "Math.sqrt(" + $square_root.exprString + ")";
+        $isDouble = true;
+        $hasKnownValue = true;
+        $value = $square_root.value;
         $hasKnownValue = false;
       }
 	| '(' expr ')' { 
