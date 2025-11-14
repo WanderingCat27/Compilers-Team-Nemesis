@@ -1,20 +1,25 @@
-print "test"
-list=[1,2,3,4,5]
-
-* append 5 to list
-add 5 to list
-
-index_one = get index 1 from list
-print "index 1: "
-print index_one
-
-* arrays are indexed starting at 1
-remove index 1 from list 
-print "\nremoved item at index 1 (arrays are indexed starting at 1 not 0)"
-
+i= 1
+list=["a","b","c"]
 print list
 
-print "\nclearing list"
+d="d"
+print "replace index 1 with 'd'"
+replace index i with d from list
+print list
+assign a index 1 from list
+print "index 1 of list: "
+print a
+
+print "adding '1' to list"
+add "1" to list
+print list
+
+print "removing index 2"
+remove index 2 from list
+print list
+
+print "\n"
+
+print "Clearing list"
 clear list
 print list
-

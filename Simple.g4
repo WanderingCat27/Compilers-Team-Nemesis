@@ -11,6 +11,7 @@ grammar Simple;
     static String DOUBLE = "double";
     static String ARRAY= "array";
     static String BOOL = "boolean";
+    static String FUNCTION_CALL = "function call";
     static String UNKNOWN = "unknown";
   }
 
@@ -292,18 +293,6 @@ assignment
       $typeOf=Types.ARRAY;
       $value="[]";
     }
-		| f = functionCall {
-      if(!$f.isSuccess) {
-        $isError = true;
-      } else if(!$f.doesReturn){
-        $isError = true;
-        error($name, "Error: attempting to assigning the return of a function when function does not return");
-      }
-      else {
-        $typeOf = Types.UNKNOWN;
-        $value = "<FUNCTION CALL>";
-      }
-    }
 		| v = VARIABLE_NAME {
 	      Identifier var = getVariable($v.getText());
       if(var == null) {
@@ -433,17 +422,18 @@ array
 
 statement:
 	append_to_array
-	| assignment
 	| remove_from_array
 	| clear_array
 	| get_from_array
+	| replace_index_array
+	| functionCall
+	| assignment
 	| for_statement
 	| while_statement
 	| input
 	| expr
 	| if_else
 	| condition
-	| functionCall
 	| output;
 
 clear_array:
@@ -454,21 +444,48 @@ append_to_array:
 	'add ' v = varExprOrType ' to ' n = VARIABLE_NAME {
   addCodeLine($n.getText() + ".add(" + $v.asText + ");");
 };
-remove_from_array:
-	'remove index ' i = INT ' from ' n = VARIABLE_NAME {
-	int index = Integer.parseInt($i.getText()) - 1;
-  addCodeLine($n.getText() + ".remove(" + index + ");");
+
+replace_index_array
+	locals[String index_code]:
+	'replace index ' (
+		i = INT {
+		      $index_code = "" + (Integer.parseInt($i.getText()) - 1);
+	  }
+		| i_v = VARIABLE_NAME {
+	      $index_code = $i_v.getText() + "-1";
+    }
+	) ' with ' v = VARIABLE_NAME ' from ' l = VARIABLE_NAME {
+	  addCodeLine($l.getText() + ".set(" + $index_code + ", " + $v.getText() + ");");
+};
+remove_from_array
+	locals[String index_code]:
+	'remove index ' (
+		i = INT {
+		      $index_code = "" + (Integer.parseInt($i.getText()) - 1);
+	  }
+		| i_v = VARIABLE_NAME {
+	      $index_code = $i_v.getText() + "-1";
+    }
+	) ' from ' n = VARIABLE_NAME {
+	  addCodeLine($n.getText() + ".remove(" + $index_code + ");");
 };
 
-get_from_array:
-	v = VARIABLE_NAME '= get index ' i = INT ' from ' n = VARIABLE_NAME {
+get_from_array
+	locals[String index_code]:
+	'assign ' v = VARIABLE_NAME ' index ' (
+		i = INT {
+		      $index_code = "" + (Integer.parseInt($i.getText()) - 1);
+	  }
+		| i_v = VARIABLE_NAME {
+	      $index_code = $i_v.getText() + "-1";
+    }
+	) ' from ' n = VARIABLE_NAME {
   Identifier arrayID = getVariable($n.getText());
   Identifier newID = getVariable($v.getText());
     if(arrayID == null)  {
 	      error($n, "array does not exist");
     } else {
       if(newID == null) {
-          int index = Integer.parseInt($i.getText()) - 1;
           newID = createVariable($v.getText(), "", arrayID.arrayType);
         } 
 
@@ -476,9 +493,8 @@ get_from_array:
         error($n, "type of array does not match type of variable");
       }  else {
         String type = newID.type;
-        int index = Integer.parseInt($i.getText()) - 1;
 
-        addCodeLine(type + " " + $v.getText() + "="+$n.getText() + ".get(" + index + ");");
+        addCodeLine(type + " " + $v.getText() + "="+$n.getText() + ".get(" + $index_code + ");");
       }
     }
 };
@@ -766,14 +782,21 @@ functionDefinition
 };
 
 functionCall
-	returns[String name, boolean doesReturn, boolean isSuccess]
-	locals[int arity]:
-	n = VARIABLE_NAME '(' (
-		varExprOrType {
+	returns[String name, boolean doesReturn, boolean isSuccess, ArrayList<String> params, String code]
+	locals[int arity, boolean isAssignment]:
+	(
+		variable = VARIABLE_NAME '=' {
+    $isAssignment = true;
+  }
+	)? n = VARIABLE_NAME '(' (
+		v = varExprOrType {
+    $params = new ArrayList<String>();
+    $params.add($v.asText);
     $arity +=1;
   } (
-			',' varExprOrType {
-	   $arity +=1;
+			',' v = varExprOrType {
+     $params.add($v.asText);
+     $arity +=1;
   }
 		)*
 	)? ')' {
@@ -788,6 +811,27 @@ functionCall
         $doesReturn = fid.doesReturn;
         $isSuccess = true;
       }
+
+      String paramString ="";
+	    if($arity >= 1) {
+	        paramString = $params.get(0);
+          for(int i = 1; i<$arity; i++){
+            paramString += "," + $params.get(i);
+          }
+      }
+      $code = $n.getText() + "(" +paramString + ");";
+        if($isAssignment) {
+	        Identifier ID = getVariable($variable.getText());
+            if(ID == null) {
+              ID = createVariable($variable.getText(), $code, Types.FUNCTION_CALL);
+              // TODO assign the variable type to the return value of function
+              $code = "Object " + ID.id + "=" + $code;
+            } else {     
+              // TODO with return type check if is the same type as function return
+              $code = ID.id + "=" + $code;
+        }
+      }
+        addCodeLine($code);
     }
   };
 
@@ -837,7 +881,6 @@ printType
           $code = "System.out.println("+String.valueOf($expr.value)+");";
 		};
 
-//output: 'print' varExprOrType;
 output:
 	'print' printType {
 		  addCodeLine($printType.code);

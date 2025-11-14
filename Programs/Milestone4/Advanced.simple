@@ -1,0 +1,28 @@
+x = [1,2,3,4,5,6,7,8,9,10]
+print x
+print "Enter a number to remove"
+y = 0
+input number y
+remove index y from x
+print x
+
+i = 1
+is y mod 2 greater than 0 {
+    print "Adding back the array..."
+    add y to x
+    print x
+}   if not {
+    print "CLearing the array..."
+    clear x
+    print x
+}
+
+print "Enter a number to add into the array 3 times"
+j = 0 
+input number j 
+repeat 3{
+    add j to x
+    print x
+}
+
+

@@ -1,2 +1,11 @@
-x = true
-print x
+define callReturn(x,y) {
+    return x
+}
+
+x=callReturn(2,4)
+
+y=3
+
+y=callReturn(4,5)
+
+callReturn(10,11)
