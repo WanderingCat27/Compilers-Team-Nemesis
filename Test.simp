@@ -1,3 +1,5 @@
-define x () {
-    print "hi"
+define int x (int y, int z) {
+    return y plus z
 }
+print "hi"
+y = "hi"

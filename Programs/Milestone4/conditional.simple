@@ -14,3 +14,7 @@ is x greater than 5 {
 }
 
 print x
+
+t=true
+
+is t equal

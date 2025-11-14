@@ -1,20 +1,20 @@
 print "test"
-x=[1,2,3,4,5]
+list=[1,2,3,4,5]
 
-print x greater than 0 {
-    print "hi"
-    x = x minus 1
-}
+* append 5 to list
+add 5 to list
 
-add 5 to x
-print x
+index_one = get index 1 from list
+print "index 1: "
+print index_one
 
 * arrays are indexed starting at 1
-remove index 1 from x 
+remove index 1 from list 
 print "\nremoved item at index 1 (arrays are indexed starting at 1 not 0)"
 
-print x
+print list
 
-print "\nclearing x"
-clear x
-print x
+print "\nclearing list"
+clear list
+print list
+

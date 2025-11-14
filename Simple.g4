@@ -6,7 +6,7 @@ grammar Simple;
   boolean isDebug = true;
 
   class Types {
-    static String STRING = "string";
+    static String STRING = "String";
     static String INT = "int";
     static String DOUBLE = "double";
     static String ARRAY= "array";
@@ -19,6 +19,7 @@ grammar Simple;
     String id;
     String value;  // The value of this identifier
     String type = Types.UNKNOWN;
+    String arrayType;
     boolean hasKnown; // Is the value known or not
     boolean hasBeenUsed;  // Has the id been used yet
     String scope; // function/global scope
@@ -47,7 +48,7 @@ grammar Simple;
 
   ArrayList<String> globalCodeLines = new ArrayList<String>();
   Map<String, FunctionIdentifier> functionTable = new HashMap();
-
+  ArrayList<FunctionIdentifier> functionList = new ArrayList<FunctionIdentifier>();
   FunctionIdentifier getFunction(String name) {
     return functionTable.get(name);
   }
@@ -209,7 +210,8 @@ grammar Simple;
       return numErrors;
   }
   //Code generation
-  StringBuilder sb = new StringBuilder(); 
+  StringBuilder sb = new StringBuilder();
+  StringBuilder sb2 = new StringBuilder();
   
   
   void emit(String s) {sb.append(s);}   
@@ -218,15 +220,22 @@ grammar Simple;
     emit("import java.util.*;\n");
     emit("public class SimpleProgram {\n");
     emit("static Scanner in = new Scanner(System.in);\n");
-    emit("  public static void main(String[] args) throws Exception {\n");
   }
 
   void writeFile() {
     try (PrintWriter pw = new PrintWriter("SimpleProgram.java", "UTF-8")) {
-      for(String line : globalCodeLines) {
+      for(int i=0; i<functionList.size(); i++) {
+        FunctionIdentifier fid = functionList.get(i);
+        for(String line : fid.code) {
           sb.append(line + "\n");
-      } 
+        }
+      }
       pw.print(sb.toString());
+      pw.print("public static void main(String[] args) throws Exception {\n");
+      for(String line : globalCodeLines) {
+          sb2.append(line + "\n");
+      } 
+      pw.print(sb2.toString());
       pw.print("}\n}\n");
     } catch (Exception e) {
       System.err.println("error: failed to write SimpleProgram.java: " + e.getMessage());
@@ -339,8 +348,10 @@ assignment
                   } else if($typeOf.equals(Types.STRING)) {
                     assignmentString = "String ";
 	                  } else if($typeOf.equals(Types.ARRAY)) {
-                    assignmentString = "ArrayList<" + $a.javaType +"> ";
-                      assignmentString += newID.id + "= new ArrayList<" + $a.javaType + ">();";
+                      assignmentString = "ArrayList<" + $a.javaType +"> ";
+	                    newID.arrayType = $a.typeOf;
+	                    System.out.println("Array type: " +  newID.arrayType);
+                    assignmentString += newID.id + "= new ArrayList<" + $a.javaType + ">();";
                   addCodeLine(assignmentString);
 		              String appendString = "Collections.addAll("+newID.id+", new "+ $a.javaType +"[]{";
                   // add values
@@ -367,7 +378,6 @@ assignment
 	                error($name,"Cannot reassign arrays");
                 }
               newID.value = $value;
-              // newID.type = $typeOf; –– cannot change type after the fact
               addCodeLine(newID.id + "=" + $value + ";");
 
           }
@@ -426,6 +436,7 @@ statement:
 	| assignment
 	| remove_from_array
 	| clear_array
+	| get_from_array
 	| for_statement
 	| while_statement
 	| input
@@ -447,6 +458,29 @@ remove_from_array:
 	'remove index ' i = INT ' from ' n = VARIABLE_NAME {
 	int index = Integer.parseInt($i.getText()) - 1;
   addCodeLine($n.getText() + ".remove(" + index + ");");
+};
+
+get_from_array:
+	v = VARIABLE_NAME '= get index ' i = INT ' from ' n = VARIABLE_NAME {
+  Identifier arrayID = getVariable($n.getText());
+  Identifier newID = getVariable($v.getText());
+    if(arrayID == null)  {
+	      error($n, "array does not exist");
+    } else {
+      if(newID == null) {
+          int index = Integer.parseInt($i.getText()) - 1;
+          newID = createVariable($v.getText(), "", arrayID.arrayType);
+        } 
+
+      if(!arrayID.arrayType.equals(newID.type)) {
+        error($n, "type of array does not match type of variable");
+      }  else {
+        String type = newID.type;
+        int index = Integer.parseInt($i.getText()) - 1;
+
+        addCodeLine(type + " " + $v.getText() + "="+$n.getText() + ".get(" + index + ");");
+      }
+    }
 };
 expr
 	returns[boolean hasKnownValue, float value, String exprString, String typeOf]:
@@ -539,7 +573,9 @@ factor
           if(t.equals(Types.DOUBLE)) {
             $isDouble = true;
 	          } else if(!t.equals(Types.INT)) {
-	            error($VARIABLE_NAME, id + " is not an int or double");
+              if (getScope().equals("Global")) {  
+	              error($VARIABLE_NAME, id + " is not an int or double");
+              }
           }
         }
         $hasKnownValue = false;
@@ -650,51 +686,83 @@ loopScope:
     };
 
 functionDefinition
-	returns[String name, int arity, boolean doesReturn, String returnType]
-	locals[ArrayList<String> variableParamNames, ArrayList<String> varType]:
+	returns[String name, int arity, boolean doesReturn, String returnType, String value]
+	locals[ArrayList<String> variableParamNames, ArrayList<String> varTypeAndName, String varType, String s]:
 	'define' r = VARIABLE_NAME {
     $returnType = $r.getText();
   }
   n = VARIABLE_NAME {
     $name = $n.getText();
-	    $variableParamNames = new ArrayList<String>();
+	  $variableParamNames = new ArrayList<String>();
+    $varTypeAndName = new ArrayList<String>();
+    $varType = "";
   } '(' (
+    VARIABLE_NAME {
+      $varType = $VARIABLE_NAME.getText();
+    }
 		VARIABLE_NAME {
-          
 		      $variableParamNames.add($VARIABLE_NAME.getText());
+          $varTypeAndName.add($varType + " " + $VARIABLE_NAME.getText());
     } (
-			',' VARIABLE_NAME {
-	        $variableParamNames.add($VARIABLE_NAME.getText());
+			',' 
+      VARIABLE_NAME {
+        $varType = $VARIABLE_NAME.getText();
       }
+      VARIABLE_NAME {
+	        $variableParamNames.add($VARIABLE_NAME.getText());
+          $varTypeAndName.add($varType + " " + $VARIABLE_NAME.getText());
+        $s = "";
+        for(int i=0; i< $varTypeAndName.size(); i++) {
+          if(i==($varTypeAndName.size()-1)) {
+            $s += $varTypeAndName.get(i);
+          } else {
+            $s += $varTypeAndName.get(i) + ", ";
+          }
+        }
+      }
+      
 		)*
 	)? ')' '{' { 
     if(doesFunctionExist($name)) {
       error($n, "Error: function " + $name + "already Exists");
     } else {
-	  setMainScope($name);
-			    for(String varName : $variableParamNames) {
-	        createVariable(varName, "<FUNCTION_PARAM>", Types.UNKNOWN);
-          if(isDebug)
-	          System.out.println("Adding " + varName + " to " + $name + " scope");
+      
+	    setMainScope($name);
+			for(String varName : $variableParamNames) {
+	    createVariable(varName, "<FUNCTION_PARAM>", Types.UNKNOWN);
+      if(isDebug) {
+	      System.out.println("Adding " + varName + " to " + $name + " scope");
+      }      
       }
+      if(!$returnType.equals("void")) {
+        $doesReturn = true;
+      } else {
+        $doesReturn = false;
+      }
+      $arity = $variableParamNames.size();
+      createFunction($name, $arity, $doesReturn);
+      addCodeLine("public " + $returnType + " " + $name + "(" + $s + ") {"); // }
     }
-} (
+    
+} ( 
 		statement
 		| ('define') {
       error($n, "Error can't define function in a function");
     }
-		| ('return' varExprOrType | expr) {
-      $doesReturn = true;
+		| ('return' y = varExprOrType | expr) { //will most likely need to edit this for recursion
+      String b = $y.asText;
+      if($doesReturn) {
+        addCodeLine("return " + $y.asText + ";");
+      } else {
+        error($n, "Error: function " + $name + " does not return a value");
+      }
       }
 	)* '}' {
-	    $arity = $variableParamNames.size();
-    createFunction($name, $arity, $doesReturn);
-    if ($doesReturn == true) {
-      //addCodeLine("public ");
-    } else {
-      addCodeLine("public void " + $name + "(" + $variableParamNames + ")");
-    }
-  exitMainScope();
+	  //$arity = $variableParamNames.size();
+    //createFunction($name, $arity, $doesReturn);
+    functionList.add(getFunction($name));
+    addCodeLine("}");
+    exitMainScope();
 };
 
 functionCall
