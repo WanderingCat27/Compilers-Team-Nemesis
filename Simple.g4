@@ -220,7 +220,7 @@ grammar Simple;
   void openProgram() {
     emit("import java.util.*;\n");
     emit("public class SimpleProgram {\n");
-    emit("static Scanner in = new Scanner(System.in);\n");
+    emit("static Scanner ___protected___in___ = new Scanner(System.in);\n");
   }
 
   void writeFile() {
@@ -339,7 +339,8 @@ assignment
 	                  } else if($typeOf.equals(Types.ARRAY)) {
                       assignmentString = "ArrayList<" + $a.javaType +"> ";
 	                    newID.arrayType = $a.typeOf;
-	                    System.out.println("Array type: " +  newID.arrayType);
+                      if(isDebug)
+                        System.out.println("Array type: " +  newID.arrayType);
                     assignmentString += newID.id + "= new ArrayList<" + $a.javaType + ">();";
                   addCodeLine(assignmentString);
 		              String appendString = "Collections.addAll("+newID.id+", new "+ $a.javaType +"[]{";
@@ -350,8 +351,9 @@ assignment
                       isFirst=false;
                       appendString += v;
                       continue;
-                    }
+                    } else {
 	                    appendString += "," + v;
+                    }
                   }
                   appendString+="});";
                   addCodeLine(appendString);
@@ -382,15 +384,15 @@ array
     $values=new ArrayList<String>();
   } (
 		(
-			(
-				v = INT {
+			v = INT {
     $typeOf = Types.INT;
 	  $javaType = "Integer";
     $values.add($v.getText());
-  } ','
-			)*? v = INT {
+  } (
+				',' v = INT {
 	    $values.add($v.getText());
   }
+			)*
 		)
 		| (
 			(
@@ -398,21 +400,23 @@ array
     $typeOf = Types.DOUBLE;
     $javaType = "Double";
     $values.add($v.getText());
-  } ','
-			)*? v = DECIMAL {
+  }
+			) (
+				',' v = DECIMAL {
 	    $values.add($v.getText());
   }
+			)*
 		)
 		| (
-			(
-				v = STRING {
+			v = STRING {
     $typeOf = Types.STRING;
     $javaType = "String";
     $values.add($v.getText());
-	  } ','
-			)*? v = STRING {
-	    $values.add($v.getText());
+	  } (
+				',' v = STRING {
+    $values.add($v.getText());
   }
+			)*
 		)
 	) ']' {
 	    if(isDebug){
@@ -519,7 +523,7 @@ expr
           if ($hasKnownValue && $b.hasKnownValue)
             $value = $value + $b.value;
         } else {
-	        $exprString += " - " + $b.value;
+		        $exprString += " - " + $b.exprString;
           if ($hasKnownValue && $b.hasKnownValue)
             $value = $value - $b.value;
         }
@@ -671,8 +675,8 @@ if_else:
 
 for_statement
 	returns[String repeats]:
-	'repeat' INT {
-   $repeats = $INT.getText();
+	'repeat' (n = INT | n = VARIABLE_NAME) {
+   $repeats = $n.getText();
 
    String i_name = "____protected_index____" + getScopeLevel();
 	 addCodeLine("for (int " +i_name +" = 0; " +i_name +" < " + $repeats + "; " +i_name +"++)" + " {"); // } 
@@ -839,15 +843,15 @@ input: input_decimal | input_string | input_number;
 
 input_string:
 	'input string ' a = VARIABLE_NAME {
-    addCodeLine($a.getText()+"=in.nextLine();");
+	    addCodeLine($a.getText()+"=___protected___in___.nextLine();");
 };
 input_number:
 	'input number ' a = VARIABLE_NAME {
-    addCodeLine($a.getText()+"=in.nextInt();");
+	    addCodeLine($a.getText()+"=___protected___in___.nextInt();");
 };
 input_decimal:
 	'input decimal ' a = VARIABLE_NAME {
-    addCodeLine($a.getText()+"=in.nextFloat();");
+	    addCodeLine($a.getText()+"=___protected___in___.nextDouble();");
 
 };
 
