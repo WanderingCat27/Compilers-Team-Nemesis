@@ -1,22 +1,30 @@
 import java.util.*;
 public class SimpleProgram {
 static Scanner ___protected___in___ = new Scanner(System.in);
-public static int t() {
-return 4 + 5;
-}
-public static int x(int y, int z) {
-t();
-return t();
-}
-public static void b() {
-System.out.print(4);
+public static void sqrt_newton(double x, int iterations) {
+double distance=0.0;
+double y=0.0;
+for (int ____protected_index____1 = 0; ____protected_index____1 < iterations; ____protected_index____1++) {
+System.out.print("input an end point");
 System.out.println();
+y=___protected___in___.nextDouble();
+distance=(x * x) + (y * y);
+distance=Math.sqrt(distance);
+System.out.print("distance:");
+System.out.println();
+System.out.print(distance);
+System.out.println();
+}
 }
 public static void main(String[] args) throws Exception {
-System.out.print("hi");
+int k=0;
+double x=0.0;
+System.out.print("input a starting point: ");
 System.out.println();
-int y=5;
-int z=x(5,4);
-double l=Math.sqrt(4.0);
+x=___protected___in___.nextDouble();
+System.out.print("input the number of iterations");
+System.out.println();
+k=___protected___in___.nextInt();
+sqrt_newton(x,k);
 }
 }

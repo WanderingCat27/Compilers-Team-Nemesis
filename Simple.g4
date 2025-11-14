@@ -506,15 +506,19 @@ get_from_array
     }
 };
 square_root
-  returns[float value, String exprString]:
-  'square root' e = expr {
-      if($e.hasKnownValue) {
-        $value = $e.value;
-        $exprString = "" + $value;
-      } else {
-        error($e.start, "cannot compute square root of unknown value");
-      }
-    };
+  returns[float value, String exprString, boolean hasKnownValue]:
+  'square root' c = VARIABLE_NAME {
+    Identifier var = getVariable($c.getText());
+    $exprString = "Math.sqrt(" + var.id + ")";
+    $hasKnownValue = false;
+  }
+  |'square root' e = expr {
+      $value = $e.value;
+      $exprString = "Math.sqrt(" + String.valueOf($e.value) + ")";   
+      $hasKnownValue = $e.hasKnownValue;
+    }
+
+    ;
 expr
 	returns[boolean hasKnownValue, float value, String exprString, String typeOf]:
 	a = word {
@@ -614,11 +618,12 @@ factor
         $hasKnownValue = false;
       }
   | square_root {
-        $factorString = "Math.sqrt(" + $square_root.exprString + ")";
+        $factorString = $square_root.exprString;
         $isDouble = true;
         $hasKnownValue = true;
-        $value = $square_root.value;
-        $hasKnownValue = false;
+        if ( $square_root.hasKnownValue ) {
+          $value = $square_root.value;
+        }
       }
 	| '(' expr ')' { 
 		    $factorString = '('+ $expr.exprString +')';
@@ -735,13 +740,19 @@ functionDefinition
     $name = $n.getText();
 	  $variableParamNames = new ArrayList<String>();
     $varTypeAndName = new ArrayList<String>();
-    $varType = "";
   } '(' (
 		VARIABLE_NAME {
       $varType = $VARIABLE_NAME.getText();
     } VARIABLE_NAME {
 		      $variableParamNames.add($VARIABLE_NAME.getText());
           $varTypeAndName.add($varType + " " + $VARIABLE_NAME.getText());
+          for(int i=0; i< $varTypeAndName.size(); i++) {
+          if(i==($varTypeAndName.size()-1)) {
+            $s = $varTypeAndName.get(i);
+          } else {
+            $s += $varTypeAndName.get(i) + ", ";
+          }
+        }
     } (
 			',' VARIABLE_NAME {
         $varType = $VARIABLE_NAME.getText();

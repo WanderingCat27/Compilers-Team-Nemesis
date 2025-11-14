@@ -11,4 +11,4 @@ define void b() {
 print "hi"
 y = 5
 z = x(5, 4)
-l = square root 4
+l = square root y
