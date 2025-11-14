@@ -1,0 +1,59 @@
+n = 0
+print "input n: "
+input number n
+
+firstVal = 0.0
+print "input firstVal: "
+input decimal firstVal
+
+total = firstVal
+mn = firstVal
+mx = firstVal
+
+pos = 0
+neg = 0
+zero = 0
+
+is firstVal greater than 0.0 {
+    pos = 1
+} if not is firstVal less than 0.0 {
+    neg = 1
+} if not {
+    zero = 1
+}
+
+i = 1
+
+while i less than n {
+    x = 0.0
+    print "input x: "
+    input decimal x
+    print x
+
+    total = total plus x
+
+    is x less than mn{
+        mn = x
+    }
+    is x greater than mx{
+        mx = x
+    }
+
+    is x greater than 0.0{
+        pos = pos plus 1
+    } if not is x less than 0.0{
+        neg = neg plus 1
+    } if not {
+        zero = zero plus 1
+    }
+
+    i = i plus 1
+}
+
+print "sum = " total
+
+print "min = " mn
+print "max = " mx
+print "pos = " pos
+print "neg = " neg
+print "zero = " zero
