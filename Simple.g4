@@ -801,8 +801,9 @@ functionDefinition
           if (type.startsWith("ArrayList") || type.startsWith("list")) {
 		            String arrayType = "";
               if(type.startsWith("list")) {
+                arrayType = type.split("_")[1];
               } else {
-            arrayType = type.substring(type.indexOf('<') + 1, type.indexOf('>'));
+                arrayType = type.substring(type.indexOf('<') + 1, type.indexOf('>'));
               }
 
             Identifier A_ID = createVariable(varName, "<FUNCTION_PARAM>", Types.ARRAY);
