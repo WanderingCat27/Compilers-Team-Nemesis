@@ -9,9 +9,9 @@ circumference = 2.0 multiply PI multiply r_str
 area = PI multiply r_str multiply r_str
 
 
-print "Hello, "
-print name inline
-print "circumference = " 
-print circumference inline
-print "area = " 
-print area inline
+print "Hello, " inline
+print name 
+print "circumference = " inline
+print circumference 
+print "area = " inline
+print area 
