@@ -831,6 +831,21 @@ functionDefinition
       for(int i = 0; i < $variableParamNames.size(); i++) {
         String varName = $variableParamNames.get(i);
         String type = $paramJavaTypes.get(i);
+
+          if (type.startsWith("ArrayList")) {
+            String arrayType = type.substring(type.indexOf('<') + 1, type.indexOf('>'));
+
+            Identifier A_ID = createVariable(varName, "<FUNCTION_PARAM>", Types.ARRAY);
+            if(arrayType.equals("Integer")) {
+              arrayType = Types.INT;
+            } else if(arrayType.equals("Double")) {
+              arrayType = Types.DOUBLE;
+            } else if(arrayType.equals("String")) {
+              arrayType = Types.STRING;
+            } else if(arrayType.equals("Boolean")) {
+              arrayType = Types.BOOL;
+            }
+            A_ID.arrayType = arrayType;
           if (type.startsWith("ArrayList") || type.startsWith("list")) {
               String arrayType = "";
               if(type.startsWith("list")) {

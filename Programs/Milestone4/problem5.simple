@@ -1,6 +1,6 @@
 
 define ArrayList<Double> merge_sort(ArrayList<Double> A, int size) {
-    sorted_right_length = 0
+
     is size less than or equal to 1 {
         return A
     }
@@ -38,22 +38,19 @@ define ArrayList<Double> merge_sort(ArrayList<Double> A, int size) {
     result = [0.0]
     clear result
 
-    while 0 equal to 0 {
-        assign sorted_right_length length of sorted_right
+    while True equal to True {
         ls = 0
-        repeat sorted_right_length {
+        repeat sorted_left {
             ls = ls plus 1
         }
 
         rs = 0
-
-        
-        repeat sorted_right_length {
+        repeat sorted_right {
             rs = rs plus 1
         }
 
         is ls equal to 0 {
-            repeat sorted_right_length {
+            repeat sorted_right {
                 assign rv index 1 from sorted_right
                 add rv to result
                 remove index 1 from sorted_right
@@ -62,8 +59,7 @@ define ArrayList<Double> merge_sort(ArrayList<Double> A, int size) {
         }
 
         is rs equal to 0 {
-            assign sorted_right_length length of sorted_right
-            repeat sorted_right_length {
+            repeat sorted_left {
                 assign lv index 1 from sorted_left
                 add lv to result
                 remove index 1 from sorted_left
@@ -106,10 +102,7 @@ clear S
 S = merge_sort(listA, n)
 
 k = 1
-
-S_length = 0
-assign S_length length of S
-repeat S_length {
+repeat S {
     assign val index k from S
     print val
     k = k plus 1
