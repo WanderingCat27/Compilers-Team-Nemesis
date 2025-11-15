@@ -995,11 +995,6 @@ printType
   $value = $STRING.getText();
 		  $code = "System.out.println("+$value+");";
     }
-	| functionCall {
-      $hasKnownValue = true;
-      $value = String.valueOf($functionCall.value);
-      $code = "System.out.println();";
-    }
 	| VARIABLE_NAME {
         String id = $VARIABLE_NAME.getText();
         used.add(id);
@@ -1020,18 +1015,19 @@ printType
 		};
 
 output
-	locals[ArrayList<String> printValues]:
-	'print' {
-    $printValues = new ArrayList<String>();
-  } (
-		v = printType {
-	    $printValues.add($v.value);
+	locals[boolean inline]:
+	(
+		'print' v = printType (
+			'inline' {
+    $inline=true;
   }
+		)?
 	) {
-      // for (String s : $printValues) {
-      //   addCodeLine("System.out.print("+s+");");
-      // }
-      addCodeLine("System.out.println("+ $v.value + ");");
+    if($inline) {
+	      addCodeLine("System.out.print("+ $v.value + ");");
+    } else {
+	      addCodeLine("System.out.println("+ $v.value + ");");
+    }
   };
 
 varExprOrType
