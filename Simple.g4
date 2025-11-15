@@ -433,6 +433,7 @@ statement:
 	| clear_array
 	| get_from_array
 	| replace_index_array
+	| array_length
 	| functionCall
 	| assignment
 	| for_statement
@@ -465,6 +466,10 @@ append_to_array:
   addCodeLine($n.getText() + ".add(" + $v.asText + ");");
 };
 
+array_length:
+	'assign ' v = VARIABLE_NAME ' length of ' n = VARIABLE_NAME {
+	    addCodeLine($v.getText() + "=" + $n.getText() + ".size();");
+  };
 replace_index_array
 	locals[String index_code]:
 	'replace index ' (
@@ -747,6 +752,18 @@ functionDefinition
 		:
 	'define' r = VARIABLE_NAME {
     $returnType = $r.getText();
+    if($returnType.startsWith("list")) {
+		      String arrayType = $returnType.split("_")[1].toLowerCase();
+		        if(arrayType.equals("int")) {
+	          $returnType = "ArrayList<Integer>";
+	          } else if(arrayType.equals("boolean")) {
+	          $returnType = "ArrayList<Boolean>";
+		          } else if(arrayType.equals("double")) {
+	          $returnType = "ArrayList<Double>";
+	          } if(arrayType.equals("string")) {
+	          $returnType = "ArrayList<String>";
+        }
+    }
   } n = VARIABLE_NAME {
     $name = $n.getText();
 	  $variableParamNames = new ArrayList<String>();
@@ -755,6 +772,17 @@ functionDefinition
   } '(' (
 		VARIABLE_NAME {
       $varType = $VARIABLE_NAME.getText();
+      if ($varType.equals("list_double"))
+          $varType = "ArrayList<Double>";
+
+      if ($varType.equals("list_boolean"))
+          $varType = "ArrayList<Boolean>";
+
+      if ($varType.equals("list_int"))
+          $varType = "ArrayList<Integer>";
+
+      if ($varType.equals("list_string"))
+          $varType = "ArrayList<String>";
       $paramJavaTypes.add($varType);
     } VARIABLE_NAME {
 		      $variableParamNames.add($VARIABLE_NAME.getText());
@@ -769,6 +797,18 @@ functionDefinition
     } (
 			',' VARIABLE_NAME {
         $varType = $VARIABLE_NAME.getText();
+        if ($varType.equals("list_double"))
+            $varType = "ArrayList<Double>";
+
+        if ($varType.equals("list_boolean"))
+            $varType = "ArrayList<Boolean>";
+
+        if ($varType.equals("list_int"))
+            $varType = "ArrayList<Integer>";
+
+        if ($varType.equals("list_string"))
+            $varType = "ArrayList<String>";
+
         $paramJavaTypes.add($varType);
       } VARIABLE_NAME {
 	        $variableParamNames.add($VARIABLE_NAME.getText());
@@ -787,7 +827,6 @@ functionDefinition
     if(doesFunctionExist($name)) {
       error($n, "Error: function " + $name + "already Exists");
     } else {
-      
 	    setMainScope($name);
       for(int i = 0; i < $variableParamNames.size(); i++) {
         String varName = $variableParamNames.get(i);
@@ -807,6 +846,28 @@ functionDefinition
               arrayType = Types.BOOL;
             }
             A_ID.arrayType = arrayType;
+          if (type.startsWith("ArrayList") || type.startsWith("list")) {
+              String arrayType = "";
+              if(type.startsWith("list")) {
+                arrayType = type.split("_")[1];
+              } else {
+                arrayType = type.substring(type.indexOf('<') + 1, type.indexOf('>'));
+              }
+            arrayType = arrayType.toLowerCase();
+            System.out.println(arrayType);
+            Identifier A_ID = createVariable(varName, "<FUNCTION_PARAM>", Types.ARRAY);
+
+            if(arrayType.equals("integer")) {
+              arrayType = Types.INT;
+            } else if(arrayType.equals("double")) {
+              arrayType = Types.DOUBLE;
+            } else if(arrayType.equals("string")) {
+              arrayType = Types.STRING;
+            } else if(arrayType.equals("boolean")) {
+              arrayType = Types.BOOL;
+            }
+            A_ID.arrayType = arrayType;
+	            
         } else {
           createVariable(varName, "<FUNCTION_PARAM>", type);
         }
@@ -991,6 +1052,7 @@ BOOL: 'True' | 'False' | 'true' | 'false';
 DECIMAL: '-'? [0-9]* '.' [0-9]*;
 VARIABLE_NAME: ([a-z] | [A-Z] | '_' | '<' | '>')+;
 COMMENT_LINE: '*' ~[\n\r]* -> skip;
+
 // skip comments
 WHITESPACE: [ \r\n\t]+ -> skip;
 // skip extra white space ~[\n\r]* -> skip;

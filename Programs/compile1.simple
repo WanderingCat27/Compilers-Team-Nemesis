@@ -1,6 +1,7 @@
 
-define int t() {
+define list_double t(list_double S) {
     return 4 plus 5
 }
 
-t()
+S=[0.0]
+t(S)
