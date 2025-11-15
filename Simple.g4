@@ -433,6 +433,7 @@ statement:
 	| clear_array
 	| get_from_array
 	| replace_index_array
+	| array_length
 	| functionCall
 	| assignment
 	| for_statement
@@ -465,6 +466,10 @@ append_to_array:
   addCodeLine($n.getText() + ".add(" + $v.asText + ");");
 };
 
+array_length:
+	'assign ' v = VARIABLE_NAME ' length of ' n = VARIABLE_NAME {
+	    addCodeLine($v.getText() + "=" + $n.getText() + ".size();");
+  };
 replace_index_array
 	locals[String index_code]:
 	'replace index ' (
@@ -793,8 +798,12 @@ functionDefinition
         String varName = $variableParamNames.get(i);
         String type = $paramJavaTypes.get(i);
 
-          if (type.startsWith("ArrayList")) {
-            String arrayType = type.substring(type.indexOf('<') + 1, type.indexOf('>'));
+          if (type.startsWith("ArrayList") || type.startsWith("list")) {
+		            String arrayType = "";
+              if(type.startsWith("list")) {
+              } else {
+            arrayType = type.substring(type.indexOf('<') + 1, type.indexOf('>'));
+              }
 
             Identifier A_ID = createVariable(varName, "<FUNCTION_PARAM>", Types.ARRAY);
             if(arrayType.equals("Integer")) {
@@ -991,6 +1000,7 @@ BOOL: 'True' | 'False' | 'true' | 'false';
 DECIMAL: '-'? [0-9]* '.' [0-9]*;
 VARIABLE_NAME: ([a-z] | [A-Z] | '_' | '<' | '>')+;
 COMMENT_LINE: '*' ~[\n\r]* -> skip;
+
 // skip comments
 WHITESPACE: [ \r\n\t]+ -> skip;
 // skip extra white space ~[\n\r]* -> skip;

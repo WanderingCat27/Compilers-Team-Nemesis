@@ -2,6 +2,7 @@ import java.util.*;
 public class SimpleProgram {
 static Scanner ___protected___in___ = new Scanner(System.in);
 public static ArrayList<Double> merge_sort(ArrayList<Double> A, int size) {
+int sorted_right_length=0;
 if(size<=1)
 {
 return A;
@@ -37,18 +38,19 @@ sorted_right=merge_sort(right,size / 2);
 ArrayList<Double> result= new ArrayList<Double>();
 Collections.addAll(result, new Double[]{0.0});
 result.clear();
-while(True==True) {
+while(0==0) {
+sorted_right_length=sorted_right.size();
 int ls=0;
-for (int ____protected_index____2 = 0; ____protected_index____2 < sorted_left; ____protected_index____2++) {
+for (int ____protected_index____2 = 0; ____protected_index____2 < sorted_right_length; ____protected_index____2++) {
 ls=ls + 1;
 }
 int rs=0;
-for (int ____protected_index____2 = 0; ____protected_index____2 < sorted_right; ____protected_index____2++) {
+for (int ____protected_index____2 = 0; ____protected_index____2 < sorted_right_length; ____protected_index____2++) {
 rs=rs + 1;
 }
 if(ls==0)
 {
-for (int ____protected_index____3 = 0; ____protected_index____3 < sorted_right; ____protected_index____3++) {
+for (int ____protected_index____3 = 0; ____protected_index____3 < sorted_right_length; ____protected_index____3++) {
 double rv=sorted_right.get(0);
 result.add(rv);
 sorted_right.remove(0);
@@ -57,7 +59,8 @@ return result;
 }
 if(rs==0)
 {
-for (int ____protected_index____3 = 0; ____protected_index____3 < sorted_left; ____protected_index____3++) {
+sorted_right_length=sorted_right.size();
+for (int ____protected_index____3 = 0; ____protected_index____3 < sorted_right_length; ____protected_index____3++) {
 double lv=sorted_left.get(0);
 result.add(lv);
 sorted_left.remove(0);
@@ -99,7 +102,9 @@ Collections.addAll(S, new Double[]{0.0});
 S.clear();
 S=merge_sort(listA,n);
 int k=1;
-for (int ____protected_index____1 = 0; ____protected_index____1 < S; ____protected_index____1++) {
+int S_length=0;
+S_length=S.size();
+for (int ____protected_index____1 = 0; ____protected_index____1 < S_length; ____protected_index____1++) {
 double val=S.get(k-1);
 System.out.print(val);
 System.out.println();
