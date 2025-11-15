@@ -443,6 +443,12 @@ statement:
 	| if_else
 	| condition
 	| output
+	| 'break' {
+	    addCodeLine("break;");  
+  }
+	| 'continue' {
+	    addCodeLine("continue;");  
+  }
 	// needed to move because returns need to be allowed in loops and ifs within functions
 	| (at = 'return' y = varExprOrType | expr) { //will most likely need to edit this for recursion
     if(isScopeGlobal()) {
@@ -453,6 +459,17 @@ statement:
           addCodeLine("return " + $y.asText + ";");
         } else {
           error($at, "Error: function does not return a value");
+        }
+        }
+  }
+	| (at = 'return') { //will most likely need to edit this for recursion
+    if(isScopeGlobal()) {
+      error($at, "error attempting to call return outside a function");
+      } {
+        if(isFunctionReturning == 0) {
+          addCodeLine("return;");
+        } else {
+          error($at, "Error: function must return a value");
         }
         }
   };
@@ -477,7 +494,7 @@ replace_index_array
 		      $index_code = "" + (Integer.parseInt($i.getText()) - 1);
 	  }
 		| i_v = VARIABLE_NAME {
-	      $index_code = $i_v.getText() + "-1";
+	      $index_code = $i_v.getText();
     }
 	) ' with ' v = VARIABLE_NAME ' from ' l = VARIABLE_NAME {
 	  addCodeLine($l.getText() + ".set(" + $index_code + ", " + $v.getText() + ");");
@@ -489,7 +506,7 @@ remove_from_array
 		      $index_code = "" + (Integer.parseInt($i.getText()) - 1);
 	  }
 		| i_v = VARIABLE_NAME {
-	      $index_code = $i_v.getText() + "-1";
+	      $index_code = $i_v.getText();
     }
 	) ' from ' n = VARIABLE_NAME {
 	  addCodeLine($n.getText() + ".remove(" + $index_code + ");");
@@ -502,7 +519,7 @@ get_from_array
 		      $index_code = "" + (Integer.parseInt($i.getText()) - 1);
 	  }
 		| i_v = VARIABLE_NAME {
-	      $index_code = $i_v.getText() + "-1";
+	      $index_code = $i_v.getText();
     }
 	) ' from ' n = VARIABLE_NAME {
   Identifier arrayID = getVariable($n.getText());
@@ -510,13 +527,14 @@ get_from_array
     if(arrayID == null)  {
 	      error($n, "array does not exist");
     } else {
+      String type = "";
       if(newID == null) {
           newID = createVariable($v.getText(), "", arrayID.arrayType);
+          type = newID.type;
         } 
       if(!arrayID.arrayType.equals(newID.type)) {
         error($n, "type of array does not match type of variable");
       }  else {
-        String type = newID.type;
 
         addCodeLine(type + " " + $v.getText() + "="+$n.getText() + ".get(" + $index_code + ");");
       }
@@ -619,7 +637,8 @@ factor
         // If we're in the middle of first assignment to VARIABLE_NAME (self-reference):
         if (!doesVariableExist(id)) {
           // General use-before-assign.
-          error($VARIABLE_NAME, "use of variable '" + id + "' before assignment");
+
+          // error($VARIABLE_NAME, "use of variable '" + id + "' before assignment");
         } else {
           String t = getVariable(id).type;
           if(t.equals(Types.DOUBLE)) {
@@ -831,21 +850,6 @@ functionDefinition
       for(int i = 0; i < $variableParamNames.size(); i++) {
         String varName = $variableParamNames.get(i);
         String type = $paramJavaTypes.get(i);
-
-          if (type.startsWith("ArrayList")) {
-            String arrayType = type.substring(type.indexOf('<') + 1, type.indexOf('>'));
-
-            Identifier A_ID = createVariable(varName, "<FUNCTION_PARAM>", Types.ARRAY);
-            if(arrayType.equals("Integer")) {
-              arrayType = Types.INT;
-            } else if(arrayType.equals("Double")) {
-              arrayType = Types.DOUBLE;
-            } else if(arrayType.equals("String")) {
-              arrayType = Types.STRING;
-            } else if(arrayType.equals("Boolean")) {
-              arrayType = Types.BOOL;
-            }
-            A_ID.arrayType = arrayType;
           if (type.startsWith("ArrayList") || type.startsWith("list")) {
               String arrayType = "";
               if(type.startsWith("list")) {
@@ -854,7 +858,6 @@ functionDefinition
                 arrayType = type.substring(type.indexOf('<') + 1, type.indexOf('>'));
               }
             arrayType = arrayType.toLowerCase();
-            System.out.println(arrayType);
             Identifier A_ID = createVariable(varName, "<FUNCTION_PARAM>", Types.ARRAY);
 
             if(arrayType.equals("integer")) {
@@ -1024,13 +1027,11 @@ output
 		v = printType {
 	    $printValues.add($v.value);
   }
-	)+ {
-      for (String s : $printValues) {
-        addCodeLine("System.out.print("+s+");");
-      }
-      addCodeLine("System.out.println();");
-      
-
+	) {
+      // for (String s : $printValues) {
+      //   addCodeLine("System.out.print("+s+");");
+      // }
+      addCodeLine("System.out.println("+ $v.value + ");");
   };
 
 varExprOrType
