@@ -1,40 +1,22 @@
 import java.util.*;
 public class SimpleProgram {
-<<<<<<< HEAD
-static Scanner in = new Scanner(System.in);
-  public static void main(String[] args) throws Exception {
-double PI=3.141592653589793;
-System.out.println(PI);
-String name="hi";
-name=in.nextLine();
-System.out.println("hello");
-=======
 static Scanner ___protected___in___ = new Scanner(System.in);
-public static void sqrt_newton(double x, int iterations) {
-double distance=0.0;
-double y=0.0;
-for (int ____protected_index____1 = 0; ____protected_index____1 < iterations; ____protected_index____1++) {
-System.out.print("input an end point");
-System.out.println();
-y=___protected___in___.nextDouble();
-distance=(x * x) + (y * y);
-distance=Math.sqrt(distance);
-System.out.print("distance:");
-System.out.println();
-System.out.print(distance);
-System.out.println();
-}
->>>>>>> e294f6c5a7bd067e4ba50168b012b74ccc312fd1
-}
 public static void main(String[] args) throws Exception {
-int k=0;
-double x=0.0;
-System.out.print("input a starting point: ");
+double PI=3.141592653589793;
+String name="";
+int r_str=3;
+name=___protected___in___.nextLine();
+r_str=___protected___in___.nextInt();
+double circumference=2.0 * PI * r_str;
+double area=PI * r_str * r_str;
+System.out.print("Hello, ");
+System.out.print(name);
 System.out.println();
-x=___protected___in___.nextDouble();
-System.out.print("input the number of iterations");
+System.out.print("circumference = ");
+System.out.print(circumference);
 System.out.println();
-k=___protected___in___.nextInt();
-sqrt_newton(x,k);
+System.out.print("area = ");
+System.out.print(area);
+System.out.println();
 }
 }
