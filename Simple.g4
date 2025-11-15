@@ -328,21 +328,22 @@ assignment
       if(doAssign){
           if(newID == null) { // if not already exists create new var
                 newID = createVariable($name.getText(), $value, $typeOf);
+
                 String assignmentString = "";
                 if($typeOf.equals(Types.DOUBLE)) {
                     assignmentString = "double ";
-		                } else if($typeOf.equals(Types.BOOL)) {
+		            } else if($typeOf.equals(Types.BOOL)) {
                     assignmentString = "boolean ";
-                  }
-                  else if($typeOf.equals(Types.INT)) {
+                }
+                else if($typeOf.equals(Types.INT)) {
                     assignmentString = "int ";
-                  } else if($typeOf.equals(Types.STRING)) {
+                } else if($typeOf.equals(Types.STRING)) {
                     assignmentString = "String ";
-	                  } else if($typeOf.equals(Types.ARRAY)) {
-                      assignmentString = "ArrayList<" + $a.javaType +"> ";
-	                    newID.arrayType = $a.typeOf;
-                      if(isDebug)
-                        System.out.println("Array type: " +  newID.arrayType);
+	              } else if($typeOf.equals(Types.ARRAY)) {
+                  assignmentString = "ArrayList<" + $a.javaType +"> ";
+                  newID.arrayType = $a.typeOf;
+                  if(isDebug)
+                    System.out.println(">>Array type: " +  newID.arrayType);
                     assignmentString += newID.id + "= new ArrayList<" + $a.javaType + ">();";
                   addCodeLine(assignmentString);
 		              String appendString = "Collections.addAll("+newID.id+", new "+ $a.javaType +"[]{";
@@ -507,7 +508,6 @@ get_from_array
       if(newID == null) {
           newID = createVariable($v.getText(), "", arrayID.arrayType);
         } 
-
       if(!arrayID.arrayType.equals(newID.type)) {
         error($n, "type of array does not match type of variable");
       }  else {
@@ -743,7 +743,7 @@ loopScope:
 
 functionDefinition
 	returns[String name, int arity, boolean doesReturn, String returnType, String value]
-	locals[ArrayList<String> variableParamNames, ArrayList<String> varTypeAndName, String varType, String s]
+	locals[ArrayList<String> variableParamNames, ArrayList<String> varTypeAndName, String varType, String s, ArrayList<String> paramJavaTypes]
 		:
 	'define' r = VARIABLE_NAME {
     $returnType = $r.getText();
@@ -751,9 +751,11 @@ functionDefinition
     $name = $n.getText();
 	  $variableParamNames = new ArrayList<String>();
     $varTypeAndName = new ArrayList<String>();
+    $paramJavaTypes = new ArrayList<String>();
   } '(' (
 		VARIABLE_NAME {
       $varType = $VARIABLE_NAME.getText();
+      $paramJavaTypes.add($varType);
     } VARIABLE_NAME {
 		      $variableParamNames.add($VARIABLE_NAME.getText());
           $varTypeAndName.add($varType + " " + $VARIABLE_NAME.getText());
@@ -767,6 +769,7 @@ functionDefinition
     } (
 			',' VARIABLE_NAME {
         $varType = $VARIABLE_NAME.getText();
+        $paramJavaTypes.add($varType);
       } VARIABLE_NAME {
 	        $variableParamNames.add($VARIABLE_NAME.getText());
           $varTypeAndName.add($varType + " " + $VARIABLE_NAME.getText());
@@ -786,11 +789,30 @@ functionDefinition
     } else {
       
 	    setMainScope($name);
-			for(String varName : $variableParamNames) {
-	    createVariable(varName, "<FUNCTION_PARAM>", Types.UNKNOWN);
-      if(isDebug) {
-	      System.out.println("Adding " + varName + " to " + $name + " scope");
-      }      
+      for(int i = 0; i < $variableParamNames.size(); i++) {
+        String varName = $variableParamNames.get(i);
+        String type = $paramJavaTypes.get(i);
+
+          if (type.startsWith("ArrayList")) {
+            String arrayType = type.substring(type.indexOf('<') + 1, type.indexOf('>'));
+
+            Identifier A_ID = createVariable(varName, "<FUNCTION_PARAM>", Types.ARRAY);
+            if(arrayType.equals("Integer")) {
+              arrayType = Types.INT;
+            } else if(arrayType.equals("Double")) {
+              arrayType = Types.DOUBLE;
+            } else if(arrayType.equals("String")) {
+              arrayType = Types.STRING;
+            } else if(arrayType.equals("Boolean")) {
+              arrayType = Types.BOOL;
+            }
+            A_ID.arrayType = arrayType;
+        } else {
+          createVariable(varName, "<FUNCTION_PARAM>", type);
+        }
+        if(isDebug) {
+          System.out.println("Adding " + varName + " to " + $name + " scope");
+        }      
       }
       if(!$returnType.equals("void")) {
         $doesReturn = true;
@@ -869,10 +891,8 @@ functionCall
 	        Identifier ID = getVariable($variable.getText());
             if(ID == null) {
               ID = createVariable($variable.getText(), $code, $funType);
-              // TODO assign the variable type to the return value of function
               $code = $funType + " " + ID.id + "=" + $code;
             } else {     
-              // TODO with return type check if is the same type as function return
               $code = ID.id + "=" + $code;
         }
       }
@@ -969,7 +989,7 @@ STRING: '"' ( ~["])* '"';
 INT: '-'? [0-9]+;
 BOOL: 'True' | 'False' | 'true' | 'false';
 DECIMAL: '-'? [0-9]* '.' [0-9]*;
-VARIABLE_NAME: ([a-z] | [A-Z] | '_')+;
+VARIABLE_NAME: ([a-z] | [A-Z] | '_' | '<' | '>')+;
 COMMENT_LINE: '*' ~[\n\r]* -> skip;
 // skip comments
 WHITESPACE: [ \r\n\t]+ -> skip;
