@@ -1,0 +1,109 @@
+
+define ArrayList<Double> merge_sort(ArrayList<Double> A, int size) {
+
+    is size less than or equal to 1 {
+        return A
+    }
+
+    mid = size divide 2
+
+    left = [0.0]
+    right = [0.0]
+    clear left
+    clear right
+
+    i = 1
+    repeat mid {
+        assign v index i from A
+        add v to left
+        i = i plus 1
+    }
+
+    j = mid plus 1
+    k = size minus mid
+    repeat k {
+        assign v_two index j from A
+        add v_two to right
+        j = j plus 1
+    }
+
+    sorted_left = [0.0]
+    clear sorted_left
+    sorted_left = merge_sort(left, size divide 2)
+    
+    sorted_right = [0.0]
+    clear sorted_right
+    sorted_right = merge_sort(right, size divide 2)
+
+    result = [0.0]
+    clear result
+
+    while True equal to True {
+        ls = 0
+        repeat sorted_left {
+            ls = ls plus 1
+        }
+
+        rs = 0
+        repeat sorted_right {
+            rs = rs plus 1
+        }
+
+        is ls equal to 0 {
+            repeat sorted_right {
+                assign rv index 1 from sorted_right
+                add rv to result
+                remove index 1 from sorted_right
+            }
+            return result
+        }
+
+        is rs equal to 0 {
+            repeat sorted_left {
+                assign lv index 1 from sorted_left
+                add lv to result
+                remove index 1 from sorted_left
+            }
+            return result
+        }
+
+        assign lv_two index 1 from sorted_left
+        assign rv_two index 1 from sorted_right
+
+        is lv_two less than or equal to rv_two {
+            add lv_two to result
+            remove index 1 from sorted_left
+        }
+        if not
+        is lv_two less than or equal to rv_two {
+            add rv_two to result
+            remove index 1 from sorted_right
+        }
+    }
+}
+n = 0
+print "input number floats to read: "
+input number n
+
+listA=[0.0]
+clear listA
+
+print "input floats: "
+repeat n {
+    in=0.0
+    input decimal in
+    add in to listA
+
+}
+
+
+S = [0.0]
+clear S
+S = merge_sort(listA, n)
+
+k = 1
+repeat S {
+    assign val index k from S
+    print val
+    k = k plus 1
+}
