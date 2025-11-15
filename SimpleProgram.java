@@ -1,35 +1,44 @@
 import java.util.*;
 public class SimpleProgram {
 static Scanner ___protected___in___ = new Scanner(System.in);
-public static double sqrt_newton(double x, int iterations) {
-if(x<=0)
-{
-return 0.0;
+public static void main(String[] args) throws Exception {
+int n=0;
+System.out.println("input number floats to read: ");
+n=___protected___in___.nextInt();
+ArrayList<Double> listA= new ArrayList<Double>();
+Collections.addAll(listA, new Double[]{0.0});
+ArrayList<Double> listB= new ArrayList<Double>();
+Collections.addAll(listB, new Double[]{0.0});
+listA.clear();
+listB.clear();
+double mean=0.0;
+System.out.println("input number floats: ");
+for (int ____protected_index____1 = 0; ____protected_index____1 < n; ____protected_index____1++) {
+double in=0.0;
+in=___protected___in___.nextDouble();
+listA.add(in);
+mean=mean + in;
 }
-double g=x;
+mean=mean / n;
 int i=0;
-while(i<iterations) {
-g=0.5 * (g + (x / g));
+for (int ____protected_index____1 = 0; ____protected_index____1 < n; ____protected_index____1++) {
+double value=listA.get(i);
+value=value - mean;
+listB.add(value);
 i=i + 1;
 }
-return g;
+System.out.println("---");
+i=0;
+for (int ____protected_index____1 = 0; ____protected_index____1 < n; ____protected_index____1++) {
+double v=listB.get(i);
+System.out.println(v);
+i=i + 1;
 }
-public static void main(String[] args) throws Exception {
-int k=0;
-double x=0.0;
-double y=0.0;
-double distance=0.0;
-System.out.print("input two points:");
-System.out.println();
-x=___protected___in___.nextDouble();
-y=___protected___in___.nextDouble();
-System.out.print("input the number of iterations:");
-System.out.println();
-k=___protected___in___.nextInt();
-distance=sqrt_newton((x * x) + (y * y),k);
-System.out.print("the distance is:");
-System.out.println();
-System.out.print(distance);
-System.out.println();
+System.out.println("");
+System.out.println("mean: ");
+System.out.println("list A: ");
+System.out.println(listA);
+System.out.println("list B: ");
+System.out.println(listB);
 }
 }
