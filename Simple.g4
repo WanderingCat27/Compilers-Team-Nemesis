@@ -49,6 +49,25 @@ grammar Simple;
   }
 
 
+  int strIteration = 0;
+  void addPrintLine(String line) {
+    String ref = "pstr" + strIteration;
+	      strIteration++;
+
+	    String assignStr = ".data\n"
+      + ref+": .asciz \""
+        + line
+        + "\"\n"
+        + ".text";
+
+		  String printStr = "la    a0, "+ref
+	      + "\nli    a7, 4"
+        +"\necall";
+	    if(isScopeGlobal()) {
+	      globalCodeLines.add(assignStr + "\n" + printStr);
+    }
+  }
+
   ArrayList<String> globalCodeLines = new ArrayList<String>();
   Map<String, FunctionIdentifier> functionTable = new HashMap();
   ArrayList<FunctionIdentifier> functionList = new ArrayList<FunctionIdentifier>();
@@ -238,12 +257,14 @@ grammar Simple;
         }
       }
       pw.print(sb.toString());
-      pw.print("public static void main(String[] args) throws Exception {\n");
+      // pw.print("public static void main(String[] args) throws Exception {\n");
       for(String line : globalCodeLines) {
           sb2.append(line + "\n");
       } 
       pw.print(sb2.toString());
-      pw.print("}\n}\n");
+
+
+      // pw.print("}\n}\n");
     } catch (Exception e) {
       System.err.println("error: failed to write SimpleProgram.java: " + e.getMessage());
     }
@@ -1032,6 +1053,8 @@ output
     } else {
 	      // addCodeLine("System.out.println("+ $v.value + ");");
     }
+
+	    addPrintLine($v.value);
   };
 
 varExprOrType
